@@ -1,0 +1,96 @@
+INSERT INTO `users` (
+        `id`,
+        `name`,
+        `email`,
+        `email_verified_at`,
+        `password`,
+        `remember_token`,
+        `created_at`,
+        `updated_at`,
+        `is_active`,
+        `shop_id`
+    )
+VALUES (
+        1,
+        'Store Owner',
+        'vendor@demo.com',
+        NULL,
+        '$2y$10$UVs.WftC2iIdLQsHz9Tbdu7OmUXG3P7wyjHvJqCunyJ7JE8ekyXr.',
+        NULL,
+        '2021-06-27 04:13:00',
+        '2023-10-02 06:53:37',
+        1,
+        NULL
+    ),
+    (
+        2,
+        'Customer',
+        'customer@demo.com',
+        NULL,
+        '$2y$10$UVs.WftC2iIdLQsHz9Tbdu7OmUXG3P7wyjHvJqCunyJ7JE8ekyXr.',
+        NULL,
+        '2021-08-18 10:30:29',
+        '2021-08-18 13:17:53',
+        1,
+        NULL
+    ),
+    (
+        4,
+        'customer2',
+        'customer2@demo.com',
+        NULL,
+        '$2y$10$UVs.WftC2iIdLQsHz9Tbdu7OmUXG3P7wyjHvJqCunyJ7JE8ekyXr.',
+        NULL,
+        '2022-03-17 14:15:08',
+        '2022-03-17 14:15:08',
+        1,
+        NULL
+    ),
+    (
+        5,
+        'customer3',
+        'customer3@demo.com',
+        NULL,
+        '$2y$10$UVs.WftC2iIdLQsHz9Tbdu7OmUXG3P7wyjHvJqCunyJ7JE8ekyXr.',
+        NULL,
+        '2022-03-17 16:25:39',
+        '2022-03-17 16:25:39',
+        1,
+        NULL
+    ),
+    (
+        6,
+        'Admin Name',
+        'admin@demo.com',
+        '2025-03-06 10:06:50',
+        '$2y$10$BU/WnGL2MNRDTXLF3VRolO7N.ZimWIIbjkNpFOI6l1b/2Y5uljS/e',
+        NULL,
+        '2025-03-06 10:06:50',
+        '2025-03-06 10:06:50',
+        1,
+        NULL
+    ),
+    (
+        7,
+        'Md Litan',
+        'kmdlitan10@demo.com',
+        NULL,
+        '$2y$10$xcOnNVIHGdOqtHNfMhAnS.dCy9mvHKdDz9/xIAX4tDRndUg8jCWra',
+        NULL,
+        '2025-03-11 06:09:18',
+        '2025-03-11 06:09:18',
+        1,
+        NULL
+    ),
+    (
+        8,
+        'test',
+        'admin200@demo.com',
+        NULL,
+        '$2y$10$sJNe.PXVuQT6CkDb58AgHuUNkSPhpVkj1UOC5kMipUcYFZPzLcgx.',
+        NULL,
+        '2025-03-13 05:29:17',
+        '2025-03-13 05:29:17',
+        1,
+        NULL
+    );

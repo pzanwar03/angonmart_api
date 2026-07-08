@@ -1,0 +1,78 @@
+INSERT INTO `commissions` (
+        `id`,
+        `level`,
+        `sub_level`,
+        `description`,
+        `min_balance`,
+        `max_balance`,
+        `commission`,
+        `image`,
+        `language`,
+        `created_at`,
+        `updated_at`
+    )
+VALUES (
+        67,
+        'Level One',
+        'Starting stage for seller',
+        'If an item (containing a book) weighing 700 gms is shipped from Delhi to Chandigarh (same region, but different city, i.e. Regional shipping) through FBA then Shipping.',
+        1,
+        '500',
+        5.00,
+        '{\"id\": 2461, \"original\": \"http://localhost/storage/2458/Group.png\", \"file_name\": \"Group.png\", \"thumbnail\": \"http://localhost/storage/2458/conversions/Group-thumbnail.jpg\"}',
+        'en',
+        '2024-06-06 12:17:52',
+        '2024-06-06 12:17:52'
+    ),
+    (
+        68,
+        'Level Two',
+        'Starting stage for seller',
+        'If an item (containing a book) weighing 700 gms is shipped from Delhi to Chandigarh (same region, but different city, i.e. Regional shipping) through FBA then Shipping.',
+        0,
+        '01000',
+        7.00,
+        '{\"id\": 2462, \"original\": \"http://localhost/storage/2459/Frame.png\", \"file_name\": \"Frame.png\", \"thumbnail\": \"http://localhost/storage/2459/conversions/Frame-thumbnail.jpg\"}',
+        'en',
+        '2024-06-06 12:17:52',
+        '2024-06-06 12:17:52'
+    ),
+    (
+        69,
+        'Level Three',
+        'Starting stage for seller',
+        'If an item (containing a book) weighing 700 gms is shipped from Delhi to Chandigarh (same region, but different city, i.e. Regional shipping) through FBA then Shipping.',
+        0,
+        '1500',
+        10.00,
+        '{\"id\": 2463, \"original\": \"http://localhost/storage/2460/Group-(1).png\", \"file_name\": \"Group-(1).png\", \"thumbnail\": \"http://localhost/storage/2460/conversions/Group-(1)-thumbnail.jpg\"}',
+        'en',
+        '2024-06-06 12:17:52',
+        '2024-06-06 12:17:52'
+    ),
+    (
+        70,
+        'Level Four',
+        'Starting stage for seller',
+        'If an item (containing a book) weighing 700 gms is shipped from Delhi to Chandigarh (same region, but different city, i.e. Regional shipping) through FBA then Shipping.',
+        0,
+        '2000',
+        15.00,
+        '{\"id\": 2464, \"original\": \"http://localhost/storage/2461/Group-(2).png\", \"file_name\": \"Group-(2).png\", \"thumbnail\": \"http://localhost/storage/2461/conversions/Group-(2)-thumbnail.jpg\"}',
+        'en',
+        '2024-06-06 12:17:52',
+        '2024-06-06 12:17:52'
+    ),
+    (
+        71,
+        'Custom',
+        'Starting stage for seller',
+        'If an item (containing a book) weighing 700 gms is shipped from Delhi to Chandigarh (same region, but different city, i.e. Regional shipping) through FBA then Shipping.',
+        0,
+        '3000',
+        50.00,
+        '{\"id\": 2465, \"original\": \"http://localhost/storage/2462/Group-(3).png\", \"file_name\": \"Group-(3).png\", \"thumbnail\": \"http://localhost/storage/2462/conversions/Group-(3)-thumbnail.jpg\"}',
+        'en',
+        '2024-06-06 12:17:52',
+        '2024-06-06 12:17:52'
+    );
