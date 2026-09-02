@@ -25,7 +25,6 @@ type RefundPolicy {
     target: String
     language: String
     status: String
-    shop_id: ID
     translated_languages: [String]
     created_at: String
     updated_at: String
@@ -42,7 +41,6 @@ input CreateRefundPolicyInput {
             apply: ["max:10000"]
             messages: { max: "Description should be max 10000 character" }
         )
-    shop_id: ID
     language: String
 }
 
@@ -57,7 +55,6 @@ input UpdateRefundPolicyInput {
             apply: ["max:10000"]
             messages: { max: "Description should be max 10000 character" }
         )
-    shop_id: ID
     language: String
 }
 

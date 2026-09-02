@@ -24,10 +24,6 @@ class ConversationResource extends Resource
             'to_user' => $this->when($this->needToInclude($request, 'conversation.to_user'), function () {
                 return new UserResource($this->to_user);
             }),
-            'shop_id' => $this->shop_id,
-            'shop' => $this->when($this->needToInclude($request, 'conversation.shop'), function () {
-                return new ShopResource($this->shop);
-            }),
             'messages' => $this->when($this->needToInclude($request, 'conversation.messages'), function () {
                 return new MessageResourceCollection($this->messages);
             }),

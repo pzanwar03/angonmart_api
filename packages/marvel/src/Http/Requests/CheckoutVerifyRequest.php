@@ -21,8 +21,12 @@ class CheckoutVerifyRequest extends FormRequest
             'amount'           => 'required|numeric',
             'customer_id'      => 'nullable|exists:Marvel\Database\Models\User,id',
             'products'         => 'required|array',
-            'billing_address'  => 'array',
-            'shipping_address' => 'array',
+            'billing_address'                 => 'nullable|array',
+            'shipping_address'                => 'required|array',
+            'shipping_address.country'        => 'required|string|in:Bangladesh',
+            'shipping_address.division_id'    => 'required|integer|exists:bd_divisions,id',
+            'shipping_address.district_id'    => 'required|integer|exists:bd_districts,id',
+            'shipping_address.thana_id'       => 'required|integer|exists:bd_thanas,id',
         ];
     }
 

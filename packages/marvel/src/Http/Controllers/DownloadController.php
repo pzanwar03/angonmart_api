@@ -35,8 +35,8 @@ class DownloadController extends CoreController
     {
         $limit = isset($request->limit) ? $request->limit : 15;
         return $this->fetchFiles($request)->paginate($limit)->loadMorph('file.fileable', [
-            Product::class => ['shop'],
-            Variation::class => ['product.shop'],
+            Product::class => ['type'],
+            Variation::class => ['product'],
         ])->withQueryString();
     }
 

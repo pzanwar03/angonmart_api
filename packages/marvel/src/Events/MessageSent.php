@@ -14,7 +14,6 @@ use Marvel\Database\Models\Message;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Cache;
 use Marvel\Database\Models\Settings;
-use Marvel\Database\Models\Shop;
 use Marvel\Database\Models\User;
 use Marvel\Exceptions\MarvelException;
 use Marvel\Enums\Permission;
@@ -78,12 +77,13 @@ class MessageSent implements ShouldBroadcast
     {
         switch ($this->type) {
             case 'shop':
-                // this case happen when admin send message to shop/vendor
-                $shop_owner = Shop::findOrFail($this->conversation->shop_id);
-                return [
-                    new PrivateChannel('message.created.' . $shop_owner->owner_id)
-                ];
-                break;
+                // this case happens when a customer sends a message to the store (admin/staff)
+                $event_channels = [];
+                foreach ($this->getAdminUsers() as $key => $user) {
+                    $channel_name = new PrivateChannel('message.created.' . $user->id);
+                    array_push($event_channels, $channel_name);
+                }
+                return $event_channels;
 
             case 'user':
                 // this case happen when user send message to admin

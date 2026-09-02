@@ -28,9 +28,6 @@ class GetSingleStoreNoticeResource extends Resource
             'expired_at' => $this->expired_at,
             'creator_role' => $this->creator_role,
             'users' => $this->users,
-            'shops' => $this->shops,
-
-
         ];
     }
 }

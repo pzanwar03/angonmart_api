@@ -21,13 +21,7 @@ class SendRefundUpdateListener implements ShouldQueue
     public function handle(RefundUpdate $event)
     {
 
-        logger('come here');
         $refund = $event->refund;
-        $order = $refund->order;
-          logger( $refund);
-          logger( $order);
-
-        if ($order->parent_id) return;
         $emailReceiver = $this->getWhichUserWillGetEmail(EventType::ORDER_REFUND, $event->refund->order->language);
 
         if ($emailReceiver['customer'] && $refund->customer()) {

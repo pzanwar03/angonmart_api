@@ -10,8 +10,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Marvel\Database\Models\Balance;
-use Marvel\Database\Models\Order;
 use Marvel\Database\Models\Wallet;
 use Marvel\Database\Repositories\RefundRepository;
 use Marvel\Enums\Permission;
@@ -62,26 +60,11 @@ class RefundController extends CoreController
                 $q->where('language', $language);
             });
 
-            switch ($user) {
-                case $user->hasPermissionTo(Permission::SUPER_ADMIN):
-                    if ((!isset($request->shop_id) || $request->shop_id === 'undefined')) {
-                        return $orderQuery->where('id', '!=', null)->where('shop_id', '=', null);
-                    }
-                    return $orderQuery->where('shop_id', '=', $request->shop_id);
-                    break;
-
-                case $this->repository->hasPermission($user, $request->shop_id):
-                    return $orderQuery->where('shop_id', '=', $request->shop_id);
-                    break;
-
-                case $user->hasPermissionTo(Permission::CUSTOMER):
-                    return $orderQuery->where('customer_id', $user->id)->where('shop_id', null);
-                    break;
-
-                default:
-                    return $orderQuery->where('customer_id', $user->id)->where('shop_id', null);
-                    break;
+            if ($this->repository->hasPermission($user)) {
+                return $orderQuery;
             }
+
+            return $orderQuery->where('customer_id', $user->id);
         } catch (MarvelException $th) {
             throw new MarvelException(SOMETHING_WENT_WRONG);
         }
@@ -115,7 +98,7 @@ class RefundController extends CoreController
     public function show($id)
     {
         try {
-            $refund = $this->repository->with(['shop', 'order', 'customer', 'refund_policy','refund_reason'])->findOrFail($id);
+            $refund = $this->repository->with(['order', 'customer', 'refund_policy','refund_reason'])->findOrFail($id);
             return new GetSingleRefundResource($refund);
         } catch (MarvelException $e) {
             throw new MarvelException(NOT_FOUND);
@@ -145,7 +128,7 @@ class RefundController extends CoreController
 
         if ($this->repository->hasPermission($user)) {
             try {
-                $refund = $this->repository->with(['shop', 'order', 'customer'])->findOrFail($request->id);
+                $refund = $this->repository->with(['order', 'customer'])->findOrFail($request->id);
             } catch (\Exception $e) {
                 throw new ModelNotFoundException(NOT_FOUND);
             }
@@ -154,17 +137,6 @@ class RefundController extends CoreController
             }
             $this->repository->updateRefund($request, $refund);
             if ($request->status == RefundStatus::APPROVED) {
-                try {
-                    $order = Order::findOrFail($refund->order_id);
-                    foreach ($order->children as $childOrder) {
-                        $balance = Balance::where('shop_id', $childOrder->shop_id)->first();
-                        $balance->total_earnings = $balance->total_earnings - $childOrder->amount;
-                        $balance->current_balance = $balance->current_balance - $childOrder->amount;
-                        $balance->save();
-                    }
-                } catch (Exception $e) {
-                    throw new ModelNotFoundException(NOT_FOUND);
-                }
                 $wallet = Wallet::firstOrCreate(['customer_id' => $refund->customer_id]);
                 $walletPoints = $this->currencyToWalletPoints($refund->amount);
                 $wallet->total_points = $wallet->total_points + $walletPoints;

@@ -1,0 +1,167 @@
+<?php
+
+return [
+
+    'accepted' => ':attribute অবশ্যই গ্রহণ করতে হবে।',
+    'active_url' => ':attribute একটি সঠিক URL নয়।',
+    'after' => ':attribute অবশ্যই :date তারিখের পরের হতে হবে।',
+    'after_or_equal' => ':attribute অবশ্যই :date অথবা তার পরের তারিখ হতে হবে।',
+    'alpha' => ':attribute-এ শুধুমাত্র অক্ষর ব্যবহার করা যাবে।',
+    'alpha_dash' => ':attribute-এ শুধুমাত্র অক্ষর, সংখ্যা, ড্যাশ (-) এবং আন্ডারস্কোর (_) ব্যবহার করা যাবে।',
+    'alpha_num' => ':attribute-এ শুধুমাত্র অক্ষর ও সংখ্যা ব্যবহার করা যাবে।',
+    'array' => ':attribute অবশ্যই একটি তালিকা (Array) হতে হবে।',
+    'before' => ':attribute অবশ্যই :date তারিখের আগের হতে হবে।',
+    'before_or_equal' => ':attribute অবশ্যই :date অথবা তার আগের তারিখ হতে হবে।',
+
+    'between' => [
+        'numeric' => ':attribute অবশ্যই :min থেকে :max এর মধ্যে হতে হবে।',
+        'file' => ':attribute-এর আকার :min থেকে :max কিলোবাইটের মধ্যে হতে হবে।',
+        'string' => ':attribute অবশ্যই :min থেকে :max অক্ষরের মধ্যে হতে হবে।',
+        'array' => ':attribute-এ :min থেকে :max টি আইটেম থাকতে হবে।',
+    ],
+
+    'boolean' => ':attribute-এর মান অবশ্যই সত্য (true) অথবা মিথ্যা (false) হতে হবে।',
+    'confirmed' => ':attribute নিশ্চিতকরণ মিলছে না।',
+    'date' => ':attribute একটি সঠিক তারিখ নয়।',
+    'date_equals' => ':attribute অবশ্যই :date তারিখের সমান হতে হবে।',
+    'date_format' => ':attribute-এর ফরম্যাট :format অনুযায়ী নয়।',
+    'different' => ':attribute এবং :other এক হতে পারবে না।',
+    'digits' => ':attribute অবশ্যই :digits সংখ্যার হতে হবে।',
+    'digits_between' => ':attribute অবশ্যই :min থেকে :max সংখ্যার মধ্যে হতে হবে।',
+    'dimensions' => 'ছবিটির ( :attribute ) আকার সঠিক নয়।',
+    'distinct' => ':attribute-এ একই মান একাধিকবার ব্যবহার করা হয়েছে।',
+    'email' => 'অনুগ্রহ করে একটি সঠিক ইমেইল ঠিকানা লিখুন।',
+    'ends_with' => ':attribute অবশ্যই নিম্নের যেকোনো একটি দিয়ে শেষ হতে হবে: :values।',
+    'exists' => 'নির্বাচিত :attribute সঠিক নয়।',
+    'file' => ':attribute অবশ্যই একটি ফাইল হতে হবে।',
+    'filled' => ':attribute অবশ্যই পূরণ করতে হবে।',
+
+    'gt' => [
+        'numeric' => ':attribute অবশ্যই :value-এর চেয়ে বড় হতে হবে।',
+        'file' => ':attribute-এর আকার অবশ্যই :value কিলোবাইটের বেশি হতে হবে।',
+        'string' => ':attribute অবশ্যই :value অক্ষরের বেশি হতে হবে।',
+        'array' => ':attribute-এ :value-এর বেশি আইটেম থাকতে হবে।',
+    ],
+
+    'gte' => [
+        'numeric' => ':attribute অবশ্যই :value অথবা তার বেশি হতে হবে।',
+        'file' => ':attribute-এর আকার অবশ্যই :value কিলোবাইট বা তার বেশি হতে হবে।',
+        'string' => ':attribute অবশ্যই :value অক্ষর বা তার বেশি হতে হবে।',
+        'array' => ':attribute-এ কমপক্ষে :value টি আইটেম থাকতে হবে।',
+    ],
+
+    'image' => ':attribute অবশ্যই একটি ছবি হতে হবে।',
+    'in' => 'নির্বাচিত :attribute সঠিক নয়।',
+    'in_array' => ':attribute, :other-এর মধ্যে পাওয়া যায়নি।',
+    'integer' => ':attribute অবশ্যই একটি পূর্ণ সংখ্যা হতে হবে।',
+    'ip' => ':attribute অবশ্যই একটি সঠিক IP ঠিকানা হতে হবে।',
+    'ipv4' => ':attribute অবশ্যই একটি সঠিক IPv4 ঠিকানা হতে হবে।',
+    'ipv6' => ':attribute অবশ্যই একটি সঠিক IPv6 ঠিকানা হতে হবে।',
+    'json' => ':attribute অবশ্যই একটি সঠিক JSON হতে হবে।',
+
+    'lt' => [
+        'numeric' => ':attribute অবশ্যই :value-এর চেয়ে ছোট হতে হবে।',
+        'file' => ':attribute-এর আকার অবশ্যই :value কিলোবাইটের কম হতে হবে।',
+        'string' => ':attribute অবশ্যই :value অক্ষরের কম হতে হবে।',
+        'array' => ':attribute-এ :value-এর কম আইটেম থাকতে হবে।',
+    ],
+
+    'lte' => [
+        'numeric' => ':attribute অবশ্যই :value অথবা তার কম হতে হবে।',
+        'file' => ':attribute-এর আকার অবশ্যই :value কিলোবাইট বা তার কম হতে হবে।',
+        'string' => ':attribute অবশ্যই :value অক্ষর বা তার কম হতে হবে।',
+        'array' => ':attribute-এ :value-এর বেশি আইটেম থাকতে পারবে না।',
+    ],
+
+    'max' => [
+        'numeric' => ':attribute :max-এর বেশি হতে পারবে না।',
+        'file' => ':attribute-এর আকার সর্বোচ্চ :max কিলোবাইট হতে পারবে।',
+        'string' => ':attribute সর্বোচ্চ :max অক্ষরের হতে পারবে।',
+        'array' => ':attribute-এ সর্বোচ্চ :max টি আইটেম থাকতে পারবে।',
+    ],
+
+    'mimes' => ':attribute অবশ্যই :values ধরনের ফাইল হতে হবে।',
+    'mimetypes' => ':attribute অবশ্যই :values ধরনের ফাইল হতে হবে।',
+
+    'min' => [
+        'numeric' => ':attribute কমপক্ষে :min হতে হবে।',
+        'file' => ':attribute-এর আকার কমপক্ষে :min কিলোবাইট হতে হবে।',
+        'string' => ':attribute কমপক্ষে :min অক্ষরের হতে হবে।',
+        'array' => ':attribute-এ কমপক্ষে :min টি আইটেম থাকতে হবে।',
+    ],
+
+    'multiple_of' => ':attribute অবশ্যই :value-এর গুণিতক হতে হবে।',
+    'not_in' => 'নির্বাচিত :attribute সঠিক নয়।',
+    'not_regex' => ':attribute-এর ফরম্যাট সঠিক নয়।',
+    'numeric' => ':attribute অবশ্যই একটি সংখ্যা হতে হবে।',
+    'password' => 'পাসওয়ার্ডটি সঠিক নয়।',
+    'present' => ':attribute অবশ্যই উপস্থিত থাকতে হবে।',
+    'regex' => ':attribute-এর ফরম্যাট সঠিক নয়।',
+    'required' => ':attribute অবশ্যই পূরণ করতে হবে।',
+    'required_if' => ':other যদি :value হয়, তাহলে :attribute অবশ্যই পূরণ করতে হবে।',
+    'required_unless' => ':other যদি :values-এর মধ্যে না থাকে, তাহলে :attribute অবশ্যই পূরণ করতে হবে।',
+    'required_with' => ':values থাকলে :attribute অবশ্যই পূরণ করতে হবে।',
+    'required_with_all' => ':values সবগুলো থাকলে :attribute অবশ্যই পূরণ করতে হবে।',
+    'required_without' => ':values না থাকলে :attribute অবশ্যই পূরণ করতে হবে।',
+    'required_without_all' => ':values কোনোটিই না থাকলে :attribute অবশ্যই পূরণ করতে হবে।',
+    'same' => ':attribute এবং :other একই হতে হবে।',
+
+    'size' => [
+        'numeric' => ':attribute অবশ্যই :size হতে হবে।',
+        'file' => ':attribute-এর আকার অবশ্যই :size কিলোবাইট হতে হবে।',
+        'string' => ':attribute অবশ্যই :size অক্ষরের হতে হবে।',
+        'array' => ':attribute-এ অবশ্যই :size টি আইটেম থাকতে হবে।',
+    ],
+
+    'starts_with' => ':attribute অবশ্যই নিম্নের যেকোনো একটি দিয়ে শুরু হতে হবে: :values।',
+    'string' => ':attribute অবশ্যই একটি টেক্সট হতে হবে।',
+    'timezone' => ':attribute অবশ্যই একটি সঠিক টাইমজোন হতে হবে।',
+    'unique' => 'এই :attribute ইতোমধ্যে ব্যবহৃত হয়েছে।',
+    'uploaded' => ':attribute আপলোড করা যায়নি।',
+    'url' => ':attribute একটি সঠিক URL নয়।',
+    'uuid' => ':attribute অবশ্যই একটি সঠিক UUID হতে হবে।',
+
+    'custom' => [
+        'attribute-name' => [
+            'rule-name' => 'কাস্টম বার্তা',
+        ],
+    ],
+
+    'attributes' => [
+        'name' => 'নাম',
+        'first_name' => 'নামের প্রথম অংশ',
+        'last_name' => 'নামের শেষ অংশ',
+        'username' => 'ব্যবহারকারীর নাম',
+        'email' => 'ইমেইল',
+        'phone' => 'মোবাইল নম্বর',
+        'mobile' => 'মোবাইল নম্বর',
+        'password' => 'পাসওয়ার্ড',
+        'password_confirmation' => 'পাসওয়ার্ড নিশ্চিতকরণ',
+        'current_password' => 'বর্তমান পাসওয়ার্ড',
+        'new_password' => 'নতুন পাসওয়ার্ড',
+        'address' => 'ঠিকানা',
+        'city' => 'শহর',
+        'country' => 'দেশ',
+        'state' => 'বিভাগ',
+        'zip' => 'পোস্টাল কোড',
+        'postal_code' => 'পোস্টাল কোড',
+        'dob' => 'জন্ম তারিখ',
+        'birth_date' => 'জন্ম তারিখ',
+        'gender' => 'লিঙ্গ',
+        'title' => 'শিরোনাম',
+        'description' => 'বিবরণ',
+        'content' => 'বিষয়বস্তু',
+        'image' => 'ছবি',
+        'photo' => 'ছবি',
+        'avatar' => 'প্রোফাইল ছবি',
+        'file' => 'ফাইল',
+        'document' => 'ডকুমেন্ট',
+        'category' => 'ক্যাটাগরি',
+        'price' => 'মূল্য',
+        'amount' => 'পরিমাণ',
+        'quantity' => 'পরিমাণ',
+        'status' => 'স্ট্যাটাস',
+        'role' => 'ভূমিকা',
+    ],
+
+];

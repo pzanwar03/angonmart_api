@@ -4,7 +4,6 @@ extend type Query {
         orderBy: String
         sortedBy: String
         customer_id: ID @eq
-        shop_id: ID @eq
     ): [Order!]!
         @paginate(
             builder: "Marvel\\GraphQL\\Queries\\OrderQuery@fetchOrders"
@@ -35,9 +34,6 @@ type Order {
     language: String
     refund: Refund @hasOne
     wallet_point: WalletPoint @hasOne
-    parent_id: ID
-    parent_order: Order @belongsTo
-    children: [Order] @hasMany
     order_status: String
     payment_status: String
     payment_intent: PaymentIntent
@@ -49,7 +45,6 @@ type Order {
     payment_gateway: PaymentGatewayType!
     altered_payment_gateway: String
     coupon: Coupon @belongsTo
-    shop: Shop @belongsTo
     discount: Float
     delivery_fee: Float
     delivery_time: String
@@ -84,7 +79,6 @@ input UpdateOrderInput {
     products: SyncProductOrderBelongsToMany
     language: String
     coupon: ConnectCouponBelongsTo
-    shop_id: ID @rules(apply: ["exists:shops,id"])
     delivery_time: String
     billing_address: UserAddressInput
     shipping_address: UserAddressInput
@@ -111,7 +105,6 @@ input CreateOrderInput {
     altered_payment_gateway: String
     payment_sub_gateway: String
     coupon_id: ID
-    shop_id: ID
     customer_id: ID
     discount: Float
     use_wallet_points: Boolean
@@ -128,11 +121,7 @@ input CreateOrderInput {
 }
 
 input generateOrderExportUrlInput {
-    shop_id: ID
-        @rules(
-            apply: []
-            messages: { exists: "Sorry! The file doesn't exists." }
-        )
+    token: String
 }
 
 input TranslatedLanguage {
@@ -161,7 +150,6 @@ input PaymentInput {
     sales_tax: Float!
     payment_gateway: PaymentGatewayType! @rules(apply: ["required"])
     coupon_id: ID
-    shop_id: ID
     customer_id: ID
     language: String
     discount: Float

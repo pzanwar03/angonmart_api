@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
-use Marvel\Database\Models\Commission;
 use Marvel\Enums\Permission;
 use Marvel\Http\Controllers\AbusiveReportController;
 use Marvel\Http\Controllers\AddressController;
@@ -13,17 +12,17 @@ use Marvel\Http\Controllers\AttachmentController;
 use Marvel\Http\Controllers\AttributeController;
 use Marvel\Http\Controllers\AttributeValueController;
 use Marvel\Http\Controllers\AuthorController;
-use Marvel\Http\Controllers\BecameSellerController;
 use Marvel\Http\Controllers\CategoryController;
 use Marvel\Http\Controllers\CheckoutController;
 use Marvel\Http\Controllers\ConversationController;
 use Marvel\Http\Controllers\CouponController;
 use Marvel\Http\Controllers\DeliveryTimeController;
+use Marvel\Http\Controllers\DeliveryZoneController;
+use Marvel\Http\Controllers\LocationController;
 use Marvel\Http\Controllers\DownloadController;
 use Marvel\Http\Controllers\FaqsController;
 use Marvel\Http\Controllers\FeedbackController;
 use Marvel\Http\Controllers\FlashSaleController;
-use Marvel\Http\Controllers\FlashSaleVendorRequestController;
 use Marvel\Http\Controllers\ManufacturerController;
 use Marvel\Http\Controllers\MessageController;
 use Marvel\Http\Controllers\OrderController;
@@ -36,17 +35,14 @@ use Marvel\Http\Controllers\ResourceController;
 use Marvel\Http\Controllers\ReviewController;
 use Marvel\Http\Controllers\SettingsController;
 use Marvel\Http\Controllers\ShippingController;
-use Marvel\Http\Controllers\ShopController;
 use Marvel\Http\Controllers\TagController;
 use Marvel\Http\Controllers\TaxController;
 use Marvel\Http\Controllers\TypeController;
 use Marvel\Http\Controllers\UserController;
 use Marvel\Http\Controllers\WebHookController;
 use Marvel\Http\Controllers\WishlistController;
-use Marvel\Http\Controllers\WithdrawController;
 use Marvel\Http\Controllers\LanguageController;
 use Marvel\Http\Controllers\NotifyLogsController;
-use Marvel\Http\Controllers\OwnershipTransferController;
 use Marvel\Http\Controllers\RefundPolicyController;
 use Marvel\Http\Controllers\RefundReasonController;
 use Marvel\Http\Controllers\StoreNoticeController;
@@ -84,11 +80,11 @@ Route::get('check-availability', [ProductController::class, 'checkAvailability']
 Route::get("products/calculate-rental-price", [ProductController::class, 'calculateRentalPrice']);
 Route::post('import-products', [ProductController::class, 'importProducts']);
 Route::post('import-variation-options', [ProductController::class, 'importVariationOptions']);
-Route::get('export-products/{shop_id}', [ProductController::class, 'exportProducts']);
-Route::get('export-variation-options/{shop_id}', [ProductController::class, 'exportVariableOptions']);
+Route::get('export-products', [ProductController::class, 'exportProducts']);
+Route::get('export-variation-options', [ProductController::class, 'exportVariableOptions']);
 Route::post('generate-description', [ProductController::class, 'generateDescription']);
 Route::post('import-attributes', [AttributeController::class, 'importAttributes']);
-Route::get('export-attributes/{shop_id}', [AttributeController::class, 'exportAttributes']);
+Route::get('export-attributes', [AttributeController::class, 'exportAttributes']);
 Route::get('download_url/token/{token}', [DownloadController::class, 'downloadFile'])->name('download_url.token');
 Route::get('export-order/token/{token}', [OrderController::class, 'exportOrder'])->name('export_order.token');
 Route::post('subscribe-to-newsletter', [UserController::class, 'subscribeToNewsletter'])->name('subscribeToNewsletter');
@@ -108,8 +104,6 @@ Route::post('webhooks/flutterwave', [WebHookController::class, 'flutterwave']);
 Route::post('license-key/verify', [UserController::class, 'verifyLicenseKey']);
 
 Route::get('callback/flutterwave', [WebHookController::class, 'callback'])->name('callback.flutterwave');
-
-Route::get('near-by-shop/{lat}/{lng}', [ShopController::class, 'nearByShop']);
 
 Route::get('store-notices', [StoreNoticeController::class, 'index'])->name('store-notices.index');
 
@@ -147,9 +141,6 @@ Route::post('coupons/verify', [CouponController::class, 'verify']);
 Route::apiResource('attributes', AttributeController::class, [
     'only' => ['index', 'show'],
 ]);
-Route::apiResource('shops', ShopController::class, [
-    'only' => ['index', 'show'],
-]);
 Route::apiResource('settings', SettingsController::class, [
     'only' => ['index'],
 ]);
@@ -168,6 +159,9 @@ Route::apiResource('authors', AuthorController::class, [
 Route::apiResource('manufacturers', ManufacturerController::class, [
     'only' => ['index', 'show'],
 ]);
+Route::get('bd-divisions', [LocationController::class, 'divisions']);
+Route::get('bd-districts', [LocationController::class, 'districts']);
+Route::get('bd-thanas', [LocationController::class, 'thanas']);
 Route::post('orders/checkout/verify', [CheckoutController::class, 'verify']);
 Route::apiResource('orders', OrderController::class, [
     'only' => ['show', 'store'],
@@ -198,7 +192,6 @@ Route::resource('refund-policies', RefundPolicyController::class, [
 ]);
 
 
-Route::post('shop-maintenance-event', [ShopController::class, 'shopMaintenanceEvent']);
 Route::apiResource('custom-page', CustomPageController::class, [
     'only' => ['index'],
 ]);
@@ -263,10 +256,6 @@ Route::group(['middleware' => ['can:' . Permission::CUSTOMER, 'auth:sanctum', 'e
     );
     Route::get('downloads', [DownloadController::class, 'fetchDownloadableFiles']);
     Route::post('downloads/digital_file', [DownloadController::class, 'generateDownloadableUrl']);
-    Route::get('/followed-shops-popular-products', [ShopController::class, 'followedShopsPopularProducts']);
-    Route::get('/followed-shops', [ShopController::class, 'userFollowedShops']);
-    Route::get('/follow-shop', [ShopController::class, 'userFollowedShop']);
-    Route::post('/follow-shop', [ShopController::class, 'handleFollowShop']);
     Route::apiResource('cards', PaymentMethodController::class, [
         'only' => ['index', 'store', 'update', 'destroy'],
     ]);
@@ -284,12 +273,12 @@ Route::group(['middleware' => ['can:' . Permission::CUSTOMER, 'auth:sanctum', 'e
 
 /**
  * ******************************************
- * Authorized Route for Staff & Store Owner
+ * Authorized Route for Staff (secondary admins)
  * ******************************************
  */
 
 Route::group(
-    ['middleware' => ['permission:' . Permission::STAFF . '|' . Permission::STORE_OWNER, 'auth:sanctum', 'email.verified']],
+    ['middleware' => ['permission:' . Permission::STAFF, 'auth:sanctum', 'email.verified']],
     function () {
         Route::apiResource('products', ProductController::class, [
             'only' => ['store', 'update', 'destroy'],
@@ -307,10 +296,6 @@ Route::group(
             'only' => ['update', 'destroy'],
         ]);
 
-        // Route::get('shop-notification/{id}', [ShopNotificationController::class, 'show']);
-        // Route::put('shop-notification/{id}', [ShopNotificationController::class, 'update']);
-        // Route::get('popular-products', [AnalyticsController::class, 'popularProducts']);
-        // Route::get('shops/refunds', 'Marvel\Http\Controllers\ShopController@refunds');
         Route::apiResource('questions', QuestionController::class, [
             'only' => ['update'],
         ]);
@@ -328,7 +313,7 @@ Route::group(
             'only' => ['show', 'store', 'update', 'destroy']
         ]);
 
-        Route::get('export-order-url/{shop_id?}', 'Marvel\Http\Controllers\OrderController@exportOrderUrl');
+        Route::get('export-order-url', 'Marvel\Http\Controllers\OrderController@exportOrderUrl');
         Route::post('download-invoice-url', 'Marvel\Http\Controllers\OrderController@downloadInvoiceUrl');
         Route::apiResource('faqs', FaqsController::class, [
             'only' => ['store', 'update', 'destroy'],
@@ -342,73 +327,14 @@ Route::group(
         Route::get('products-by-flash-sale', [FlashSaleController::class, 'getProductsByFlashSale']);
         Route::get('top-rate-product', [AnalyticsController::class, 'topRatedProducts']);
         Route::apiResource('coupons', CouponController::class, [
-            'only' => ['update'],
-        ]);
-        // Route::get('products-requested-for-flash-sale-by-vendor', [FlashSaleVendorRequestController::class, 'getProductsByFlashSaleVendorRequest']);
-        Route::get('requested-products-for-flash-sale', [FlashSaleVendorRequestController::class, 'getRequestedProductsForFlashSale']);
-        Route::apiResource('vendor-requests-for-flash-sale', FlashSaleVendorRequestController::class, [
-            'only' => ['index', 'show', 'store', 'destroy'],
-        ]);
-    }
-);
-
-
-/**
- * *****************************************
- * Authorized Route for Store owner Only
- * *****************************************
- */
-
-Route::group(
-    ['middleware' => ['permission:' . Permission::STORE_OWNER, 'auth:sanctum', 'email.verified']],
-    function () {
-        Route::apiResource('shops', ShopController::class, [
             'only' => ['store', 'update', 'destroy'],
         ]);
-        // Route::get('analytics', [AnalyticsController::class, 'analytics']);
-        Route::apiResource('withdraws', WithdrawController::class, [
-            'only' => ['store', 'index', 'show'],
-        ]);
-        Route::post('staffs', [ShopController::class, 'addStaff']);
-        Route::delete('staffs/{id}', [ShopController::class, 'deleteStaff']);
-        Route::get('staffs', [UserController::class, 'staffs']);
-        Route::get('my-shops', [ShopController::class, 'myShops']);
-        Route::post('transfer-shop-ownership', [ShopController::class, 'transferShopOwnership']);
-
-        // Route::get('/admin/list', [UserController::class, 'admins']);
-        // Route::apiResource('notify-logs', NotifyLogsController::class, [
-        //     'only' => ['index'],
-        // ]);
-
-        // Route::post('notify-log-seen', [NotifyLogsController::class, 'readNotifyLogs']);
-        // Route::post('notify-log-read-all', [NotifyLogsController::class, 'readAllNotifyLogs']);
-
-        // Route::apiResource('faqs', FaqsController::class, [
-        //     'only' => ['store', 'update', 'destroy'],
-        // ]);
-
         Route::apiResource('flash-sale', FlashSaleController::class, [
             'only' => ['store', 'update', 'destroy'],
         ]);
-
         Route::get('product-flash-sale-info', [FlashSaleController::class, 'getFlashSaleInfoByProductID']);
-
         Route::apiResource('terms-and-conditions', TermsAndConditionsController::class, [
             'only' => ['store', 'update', 'destroy'],
-        ]);
-
-        Route::apiResource('coupons', CouponController::class, [
-            'only' => ['store', 'destroy'],
-        ]);
-
-        Route::apiResource('terms-and-conditions', TermsAndConditionsController::class, [
-            'only' => ['store', 'update', 'destroy'],
-        ]);
-        Route::get('/vendors/list', [UserController::class, 'vendors']);
-        // Route::post('products-request-for-flash-sale', [FlashSaleVendorRequestController::class, 'productsRequestForFlashSale']);
-
-        Route::apiResource('ownership-transfer', OwnershipTransferController::class, [
-            'only' => ['index', 'show'],
         ]);
     }
 );
@@ -420,13 +346,8 @@ Route::group(
  */
 
 Route::group(['middleware' => ['permission:' . Permission::SUPER_ADMIN, 'auth:sanctum']], function () {
-    // Route::get('messages/get-conversations/{shop_id}', [ConversationController::class, 'getConversationByShopId']);
-    // Route::get('analytics', [AnalyticsController::class, 'analytics']);
     Route::apiResource('types', TypeController::class, [
         'only' => ['store', 'update', 'destroy'],
-    ]);
-    Route::apiResource('withdraws', WithdrawController::class, [
-        'only' => ['update', 'destroy'],
     ]);
     Route::apiResource('categories', CategoryController::class, [
         'only' => ['store', 'update', 'destroy'],
@@ -480,9 +401,7 @@ Route::group(['middleware' => ['permission:' . Permission::SUPER_ADMIN, 'auth:sa
     Route::post('users/unblock-user', [UserController::class, 'activeUser']);
     Route::apiResource('taxes', TaxController::class);
     Route::apiResource('shippings', ShippingController::class);
-    Route::post('approve-shop', [ShopController::class, 'approveShop']);
-    Route::post('disapprove-shop', [ShopController::class, 'disApproveShop']);
-    Route::post('approve-withdraw', [WithdrawController::class, 'approveWithdraw']);
+    Route::apiResource('delivery-zones', DeliveryZoneController::class);
     Route::post('add-points', [UserController::class, 'addPoints']);
     Route::post('users/make-admin', [UserController::class, 'makeOrRevokeAdmin']);
     Route::apiResource(
@@ -495,34 +414,16 @@ Route::group(['middleware' => ['permission:' . Permission::SUPER_ADMIN, 'auth:sa
     Route::apiResource('notify-logs', NotifyLogsController::class, [
         'only' => ['destroy'],
     ]);
-    // Route::apiResource('faqs', FaqsController::class, [
-    //     'only' => ['store', 'update', 'destroy'],
-    // ]);
-    Route::get('new-shops', [ShopController::class, 'newOrInActiveShops']);
-    Route::post('approve-terms-and-conditions', [TermsAndConditionsController::class, 'approveTerm']);
-    Route::post('disapprove-terms-and-conditions', [TermsAndConditionsController::class, 'disApproveTerm']);
     Route::get('/admin/list', [UserController::class, 'admins']);
 
     Route::get('/customers/list', [UserController::class, 'customers']);
-    Route::get('my-staffs', [UserController::class, 'myStaffs']);
-    Route::get('all-staffs', [UserController::class, 'allStaffs']);
+    Route::post('staffs', [UserController::class, 'addStaff']);
+    Route::delete('staffs/{id}', [UserController::class, 'deleteStaff']);
+    Route::get('staffs', [UserController::class, 'staffs']);
     Route::resource('refund-policies', RefundPolicyController::class, [
         'only' => ['store', 'update', 'destroy'],
     ]);
-    Route::post('approve-coupon', [CouponController::class, 'approveCoupon']);
-    Route::post('disapprove-coupon', [CouponController::class, 'disApproveCoupon']);
-    // Route::get('requested-products-for-flash-sale', [FlashSaleVendorRequestController::class, 'getRequestedProductsForFlashSale']);
-    Route::post('approve-flash-sale-requested-products', [FlashSaleVendorRequestController::class, 'approveFlashSaleProductsRequest']);
-    Route::post('disapprove-flash-sale-requested-products', [FlashSaleVendorRequestController::class, 'disapproveFlashSaleProductsRequest']);
-    Route::apiResource('vendor-requests-for-flash-sale', FlashSaleVendorRequestController::class, [
-        'only' => ['update'],
-    ]);
-
-    Route::apiResource('ownership-transfer', OwnershipTransferController::class, [
-        'only' => ['update', 'destroy'],
-    ]);
 });
-Route::apiResource('became-seller', BecameSellerController::class);
 Route::apiResource('custom-page', CustomPageController::class, [
     'only' => ['store', 'update', 'destroy'],
 ]);

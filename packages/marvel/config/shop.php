@@ -10,7 +10,9 @@ return [
     | Set the admin email. This will be used to send email when user contact through contact page.
     |
     */
-    'admin_email' => env('ADMIN_EMAIL'),
+    'admin_email'       => env('ADMIN_EMAIL'),
+
+    'merchant_contact'  => env('MERCHANT_CONTACT', '01911104686'),
 
     /*
     |--------------------------------------------------------------------------

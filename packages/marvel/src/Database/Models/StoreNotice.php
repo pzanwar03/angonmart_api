@@ -14,7 +14,7 @@ class StoreNotice extends Model
     use SoftDeletes;
 
     public $guarded = [];
-    public $with = ['creator', 'users', 'shops', 'read_status'];
+    public $with = ['creator', 'users', 'read_status'];
     protected $table = 'store_notices';
     protected $appends = [
         'is_read', 'creator_role'
@@ -68,14 +68,6 @@ class StoreNotice extends Model
     }
 
     /**
-     * @return BelongsToMany
-     */
-    public function shops(): BelongsToMany
-    {
-        return $this->belongsToMany(Shop::class, 'store_notice_shop');
-    }
-
-    /**
      * @return string
      */
     public function getCreatorRoleAttribute(): string
@@ -85,7 +77,7 @@ class StoreNotice extends Model
             if (in_array(Permission::SUPER_ADMIN, $permissionArr)) {
                 return ucfirst(str_replace('_', ' ', Permission::SUPER_ADMIN));
             }
-            return ucfirst(str_replace('_', ' ', Permission::STORE_OWNER));
+            return ucfirst(str_replace('_', ' ', Permission::STAFF));
         } catch (\Throwable $th) {
             return '';
         }

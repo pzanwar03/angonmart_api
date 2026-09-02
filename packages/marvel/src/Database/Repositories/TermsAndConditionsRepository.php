@@ -7,7 +7,6 @@ use Exception;
 use Prettus\Repository\Criteria\RequestCriteria;
 use Prettus\Repository\Exceptions\RepositoryException;
 use Illuminate\Http\Request;
-use Marvel\Database\Models\Shop;
 use Marvel\Database\Models\TermsAndConditions;
 
 class TermsAndConditionsRepository extends BaseRepository
@@ -18,7 +17,6 @@ class TermsAndConditionsRepository extends BaseRepository
      */
     protected $fieldSearchable = [
         'title' => 'like',
-        'shop_id',
         'language',
         'type',
         'issued_by',
@@ -64,20 +62,14 @@ class TermsAndConditionsRepository extends BaseRepository
     public function storeTermsAndConditions($request)
     {
         try {
-            if (isset($request['shop_id']) && !empty($request['shop_id'])) {
-                // $shop = Shop::where('id', '=', $request['shop_id'])->first();
-                $shop = Shop::findOrFail($request['shop_id']);
-            }
-
             $termsAndConditions                = [];
             $termsAndConditions['title']       = $request['title'];
             $termsAndConditions['description'] = $request['description'];
             $termsAndConditions['user_id']     = $request->user()->id;
-            $termsAndConditions['shop_id']     = isset($request['shop_id']) ? $request['shop_id'] : null;
-            $termsAndConditions['type']        = isset($request['shop_id']) ? 'shop' : 'global';
-            $termsAndConditions['issued_by']   = isset($request['shop_id']) && isset($shop) ? $shop->name : 'Super Admin';
+            $termsAndConditions['type']        = 'global';
+            $termsAndConditions['issued_by']   = 'Super Admin';
             $termsAndConditions['language']    = $request['language'] ?? DEFAULT_LANGUAGE;
-            $termsAndConditions['is_approved'] = isset($request['shop_id']) && isset($shop) ? false : true;
+            $termsAndConditions['is_approved'] = true;
 
             $this->create($termsAndConditions);
             return $termsAndConditions;

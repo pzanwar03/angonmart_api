@@ -21,10 +21,8 @@ trait StoreNoticeable
     public function syncReadStatus(StoreNotice $storeNotice)
     {
         $userIdArr = match ($storeNotice->type) {
-            StoreNoticeType::ALL_VENDOR      => User::permission(Permission::STORE_OWNER)->get()->pluck('id'),
-            StoreNoticeType::ALL_SHOP        => $storeNotice->creator->shops->pluck('id'),
-            StoreNoticeType::SPECIFIC_SHOP   => $storeNotice->shops->pluck('id'),
-            StoreNoticeType::SPECIFIC_VENDOR => $storeNotice->users()->pluck('id'),
+            StoreNoticeType::ALL_VENDOR, StoreNoticeType::ALL_SHOP => User::permission(Permission::STAFF)->get()->pluck('id'),
+            StoreNoticeType::SPECIFIC_SHOP, StoreNoticeType::SPECIFIC_VENDOR => $storeNotice->users()->pluck('id'),
         };
         $storeNoticeReadArray =  Arr::map(
             $userIdArr->toArray(),
@@ -48,18 +46,13 @@ trait StoreNoticeable
     {
         switch ($request->type) {
             case StoreNoticeType::ALL_VENDOR:
-                $request->received_by = User::permission(Permission::STORE_OWNER)->pluck('id');
+            case StoreNoticeType::ALL_SHOP:
+                $request->received_by = User::permission(Permission::STAFF)->pluck('id');
                 $storeNotice->users()->sync($request->received_by);
                 break;
             case StoreNoticeType::SPECIFIC_VENDOR:
-                $storeNotice->users()->sync($request->received_by);
-                break;
-            case StoreNoticeType::ALL_SHOP:
-                $request->received_by = $storeNotice->creator->shops->pluck('id');
-                $storeNotice->shops()->sync($request->received_by);
-                break;
             case StoreNoticeType::SPECIFIC_SHOP:
-                $storeNotice->shops()->sync($request->received_by);
+                $storeNotice->users()->sync($request->received_by);
                 break;
         }
         return $storeNotice;

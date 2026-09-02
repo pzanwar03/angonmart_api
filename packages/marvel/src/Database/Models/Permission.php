@@ -18,6 +18,6 @@ class Permission extends SpatiePermission
             config('permission.table_names.model_has_permissions'),
             'permission_id',
             config('permission.column_names.model_morph_key')
-        )->with('profile', 'address', 'shop');
+        )->with('profile', 'address');
     }
 }

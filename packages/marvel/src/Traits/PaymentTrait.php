@@ -133,18 +133,6 @@ trait PaymentTrait
         $order['altered_payment_gateway'] = $initial_payment_gateway;
         $order['payment_gateway'] = strtoupper($chosen_payment_gateway);
         $order->save();
-        try {
-            $children = json_decode($order->children);
-        } catch (\Throwable $th) {
-            $children = $order->children;
-        }
-        if (is_array($children) && count($children)) {
-            foreach ($order->children as $child_order) {
-                $child_order->payment_gateway = strtoupper($chosen_payment_gateway);
-                $child_order->altered_payment_gateway = $initial_payment_gateway;
-                $child_order->save();
-            }
-        }
     }
 
 
@@ -357,18 +345,6 @@ trait PaymentTrait
         $order->order_status = $order_status;
         $order->payment_status = $payment_status;
         $order->save();
-        try {
-            $children = json_decode($order->children);
-        } catch (\Throwable $th) {
-            $children = $order->children;
-        }
-        if (is_array($children) && count($children)) {
-            foreach ($order->children as $child_order) {
-                $child_order->order_status = $order_status;
-                $child_order->payment_status = $payment_status;
-                $child_order->save();
-            }
-        }
         $this->orderStatusManagementOnPayment($order, OrderStatus::PROCESSING, $payment_status);
     }
 }

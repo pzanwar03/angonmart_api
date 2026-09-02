@@ -16,6 +16,12 @@ type UserAddress {
     city: String
     state: String
     zip: String
+    division_id: ID
+    division: String
+    district_id: ID
+    district: String
+    thana_id: ID
+    thana: String
 }
 
 input UserAddressInput {
@@ -24,6 +30,12 @@ input UserAddressInput {
     city: String
     state: String
     zip: String
+    division_id: ID
+    division: String
+    district_id: ID
+    district: String
+    thana_id: ID
+    thana: String
 }
 
 type GoogleMapLocation {

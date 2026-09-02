@@ -124,7 +124,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here active otp gateway value will be taken form the environment variables.
-    | values can be 'twilio'|'messagebird'
+    | values can be 'twilio'|'messagebird'|'sendmysms'|'smsgatewaybd'
     |
     */
 

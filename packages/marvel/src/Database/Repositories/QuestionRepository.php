@@ -21,7 +21,6 @@ class QuestionRepository extends BaseRepository
      * @var array
      */
     protected $fieldSearchable = [
-        'shop_id',
         'product_id',
         'question' => 'like',
         'answer'
@@ -31,7 +30,6 @@ class QuestionRepository extends BaseRepository
      */
     protected $dataArray = [
         'product_id',
-        'shop_id',
         'user_id',
         'question',
         'answer'

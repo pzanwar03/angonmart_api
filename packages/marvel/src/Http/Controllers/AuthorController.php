@@ -55,7 +55,7 @@ class AuthorController extends CoreController
     public function store(AuthorRequest $request)
     {
         try {
-            if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+            if ($this->repository->hasPermission($request->user())) {
                 return $this->repository->storeAuthor($request);
             }
             throw new AuthorizationException(NOT_AUTHORIZED);
@@ -118,7 +118,7 @@ class AuthorController extends CoreController
 
     public function updateAuthor(Request $request)
     {
-        if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+        if ($this->repository->hasPermission($request->user())) {
             try {
                 $author = $this->repository->findOrFail($request->id);
             } catch (\Exception $e) {

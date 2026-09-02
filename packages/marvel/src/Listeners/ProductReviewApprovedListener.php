@@ -5,9 +5,12 @@ namespace Marvel\Listeners;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Marvel\Events\ProductReviewApproved;
 use Marvel\Notifications\ProductApprovedNotification;
+use Marvel\Traits\UsersTrait;
 
 class ProductReviewApprovedListener implements ShouldQueue
-{   
+{
+    use UsersTrait;
+
     /**
      * Handle the event.
      *
@@ -16,7 +19,8 @@ class ProductReviewApprovedListener implements ShouldQueue
      */
     public function handle(ProductReviewApproved $event)
     {
-        $vendor = $event->product->shop->owner;
-        $vendor->notify(new ProductApprovedNotification($event->product));
+        foreach ($this->getAdminUsers() as $admin) {
+            $admin->notify(new ProductApprovedNotification($event->product));
+        }
     }
 }

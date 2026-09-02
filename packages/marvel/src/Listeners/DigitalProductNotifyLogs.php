@@ -7,8 +7,6 @@ use App\Notifications\NewReviewCreated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Marvel\Database\Models\NotifyLogs;
-use Marvel\Database\Models\Order;
-use Marvel\Database\Models\Shop;
 use Marvel\Enums\EventType;
 use Illuminate\Support\Facades\Cache;
 use Marvel\Database\Models\User;

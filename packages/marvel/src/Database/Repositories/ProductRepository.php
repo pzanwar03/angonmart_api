@@ -38,7 +38,6 @@ class ProductRepository extends BaseRepository
      */
     protected $fieldSearchable = [
         'name'        => 'like',
-        'shop_id',
         'status',
         'is_rental',
         'type.slug',
@@ -58,7 +57,6 @@ class ProductRepository extends BaseRepository
         'metas.key',
         'metas.value',
         'product_type',
-        'visibility'
     ];
 
     protected $dataArray = [
@@ -84,15 +82,19 @@ class ProductRepository extends BaseRepository
         'image',
         'gallery',
         'video',
+        'video_file',
         'status',
         'height',
         'length',
         'width',
         'in_stock',
+        'is_preorder',
+        'preorder_available_at',
         'is_taxable',
-        'shop_id',
         'sold_quantity',
-        'visibility'
+        'is_verified',
+        'highlights',
+        'specifications',
     ];
     public function getProductDataArray(): array
     {
@@ -126,69 +128,22 @@ class ProductRepository extends BaseRepository
     public function processFlashSaleProducts(Request $request, $products_query)
     {
         $user = $request->user();
-        switch ($user) {
-            case $user->hasPermissionTo(Permission::SUPER_ADMIN):
 
-                // if condition : during deal data build
-                // else condition : when he entered into vendor shop & check
-                if ($request->searchedByUser === 'super_admin_builder') {
+        if ($user && $user->hasPermissionTo(Permission::SUPER_ADMIN) && $request->searchedByUser === 'super_admin_builder') {
+            // building a new flash sale: only show products not already in flash sale and without a sale price set
+            $author_id = $request->author ?? null;
+            $manufacturer_id = $request->manufacturer ?? null;
 
-                    $shop_id = $request->shop_id ?? null;
-                    $author_id = $request->author ?? null;
-                    $manufacturer_id = $request->manufacturer ?? null;
-
-                    $products_query = $products_query->where('in_flash_sale', '=', false)
-                        ->where('sale_price', '=', null)
-                        ->whereNotIn('id', function ($query) {
-                            $query->select('product_id')->from('flash_sale_requests_products');
-                        })
-                        ->when($shop_id, function ($products_query) use ($shop_id) {
-                            return $products_query->where('shop_id', '=',  $shop_id);
-                        })
-                        ->when($author_id, function ($products_query) use ($author_id) {
-                            return $products_query->where('author_id', '=',  $author_id);
-                        })
-                        ->when($manufacturer_id, function ($products_query) use ($manufacturer_id) {
-                            return $products_query->where('manufacturer_id', '=',  $manufacturer_id);
-                        });
-                } else {
-                    $products_query = $products_query->where('in_flash_sale', '=', true)->where('shop_id', '=', $request->shop_id);
-                }
-
-                break;
-
-            case $user->hasPermissionTo(Permission::STORE_OWNER):
-
-                // if condition : when he want to see shop specific products
-                // else condition : fetched all deal products of vendor's listed all shops. This can be used in vendor root page route
-                if ($request->shop_id) {
-                    // if : fetching shop product for building flash sale request
-                    // else : just seeing which products are selected for flash sale of this shop
-                    if ($request->searchedByUser === 'vendor') {
-                        $products_query = $products_query->where('in_flash_sale', '=', false)
-                            ->where('shop_id', '=', $request->shop_id)
-                            ->where('sale_price', '=', null);
-                    } else {
-                        $products_query = $products_query->where('in_flash_sale', '=', true);
-                    }
-                } else {
-                    $products_query = $products_query->where('in_flash_sale', '=', true)->whereIn('shop_id', $user->shops->pluck('id'));
-                }
-
-                break;
-
-            case $user->hasPermissionTo(Permission::STAFF):
-
-                // staff can see only his assigned shop's deals product
-                $products_query = $products_query->where('in_flash_sale', '=', true);
-                break;
-
-
-            case $user->hasPermissionTo(Permission::CUSTOMER):
-
-                // customer can see all the products of a deal
-                $products_query = $products_query->where('in_flash_sale', '=', true);
-                break;
+            $products_query = $products_query->where('in_flash_sale', '=', false)
+                ->where('sale_price', '=', null)
+                ->when($author_id, function ($products_query) use ($author_id) {
+                    return $products_query->where('author_id', '=',  $author_id);
+                })
+                ->when($manufacturer_id, function ($products_query) use ($manufacturer_id) {
+                    return $products_query->where('manufacturer_id', '=',  $manufacturer_id);
+                });
+        } else {
+            $products_query = $products_query->where('in_flash_sale', '=', true);
         }
 
         return $products_query;
@@ -207,6 +162,11 @@ class ProductRepository extends BaseRepository
         try {
             $data = $request->only($this->dataArray);
             $data['slug'] = $this->makeSlug($request);
+
+            if (empty($data['is_preorder'])) {
+                $data['is_preorder'] = false;
+                $data['preorder_available_at'] = null;
+            }
 
             if ($setting->options["isProductReview"]) {
                 if ($request->status == ProductStatus::DRAFT) {
@@ -299,7 +259,21 @@ class ProductRepository extends BaseRepository
     public function checkProductForPublish($request, $product)
     {
         $status = '';
-        if ($product->shop['owner']['id'] == $request->user()->id) {
+        if ($request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
+            if ($request->status == ProductStatus::APPROVED) {
+                $status = ProductStatus::PUBLISH;
+                event(new ProductReviewApproved($product));
+            } elseif ($request->status == ProductStatus::REJECTED) {
+                $status = ProductStatus::REJECTED;
+                event(new ProductReviewRejected($product));
+            } elseif ($request->status == ProductStatus::PUBLISH) {
+                return ProductStatus::PUBLISH;
+            } elseif ($request->status == ProductStatus::UNPUBLISH) {
+                $status = ProductStatus::UNPUBLISH;
+            } else {
+                $status = ProductStatus::REJECTED;
+            }
+        } elseif ($request->user()->hasPermissionTo(Permission::STAFF)) {
             if ($product->status == ProductStatus::DRAFT || $product->status == ProductStatus::UNDER_REVIEW || $product->status == ProductStatus::REJECTED) {
                 if ($request->status == ProductStatus::DRAFT) {
                     $status = ProductStatus::DRAFT;
@@ -316,20 +290,6 @@ class ProductRepository extends BaseRepository
                 } else {
                     $status = ProductStatus::UNPUBLISH;
                 }
-            }
-        } elseif ($request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
-            if ($request->status == ProductStatus::APPROVED) {
-                $status = ProductStatus::PUBLISH;
-                event(new ProductReviewApproved($product));
-            } elseif ($request->status == ProductStatus::REJECTED) {
-                $status = ProductStatus::REJECTED;
-                event(new ProductReviewRejected($product));
-            } elseif ($request->status == ProductStatus::PUBLISH) {
-                return ProductStatus::PUBLISH;
-            } elseif ($request->status == ProductStatus::UNPUBLISH) {
-                $status = ProductStatus::UNPUBLISH;
-            } else {
-                $status = ProductStatus::REJECTED;
             }
         } else {
             $status = ProductStatus::REJECTED;
@@ -463,6 +423,11 @@ class ProductRepository extends BaseRepository
             $data = $request->only($this->dataArray);
             $data['sale_price'] = isset($request['sale_price']) ? $request['sale_price'] : null;
 
+            if (array_key_exists('is_preorder', $data) && empty($data['is_preorder'])) {
+                $data['is_preorder'] = false;
+                $data['preorder_available_at'] = null;
+            }
+
             if ($setting->options["isProductReview"]) {
                 $data['status'] = $this->checkProductForPublish($request, $product);
             }
@@ -556,17 +521,13 @@ class ProductRepository extends BaseRepository
 
         $products_query = Product::leftJoin('order_product', 'order_product.product_id', 'products.id')
             ->leftJoin('orders', 'order_product.order_id', '=', 'orders.id')
-            ->with(['type', 'shop'])
+            ->with(['type'])
             ->selectRaw('products.*, sum(order_product.order_quantity) total_sales')
-            ->where('orders.parent_id', null)
             ->where('orders.order_status', 'order-completed')
             ->where('orders.language', $language)
             ->groupBy('order_product.product_id')
             ->orderBy('total_sales', 'desc');
 
-        if (isset($request->shop_id)) {
-            $products_query = $products_query->where('shop_id', "=", $request->shop_id);
-        }
         if ($range) {
             $products_query = $products_query->whereDate('created_at', '>', Carbon::now()->subDays($range));
         }

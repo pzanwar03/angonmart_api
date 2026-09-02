@@ -5,7 +5,6 @@ namespace Marvel\Database\Models;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Marvel\Traits\TranslationTrait;
@@ -38,17 +37,8 @@ class RefundPolicy extends Model
     }
 
     /**
-     * @return BelongsTo
+     * @return HasMany
      */
-    public function shop(): BelongsTo
-    {
-        return $this->belongsTo(Shop::class);
-    }
-
-    /**
-     * @return BelongsTo
-     */
-
     public function refunds(): HasMany
     {
         return $this->hasMany(Refund::class);

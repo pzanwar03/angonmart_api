@@ -25,7 +25,6 @@ class ReviewRepository extends BaseRepository
      */
     protected $fieldSearchable = [
         'rating',
-        'shop_id',
         'product_id',
     ];
 
@@ -37,10 +36,10 @@ class ReviewRepository extends BaseRepository
         'product_id',
         'variation_option_id',
         'user_id',
-        'shop_id',
         'comment',
         'rating',
-        'photos'
+        'photos',
+        'is_verified'
     ];
 
     public function boot()

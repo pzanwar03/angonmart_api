@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
         }
     </style>
-    @if ($language === 'bd')
+    @if ($language === 'bn')
         <style type="text/css">
             body {
                 font-family: Arial, DejaVu Sans, sans-serif, 'bangla';

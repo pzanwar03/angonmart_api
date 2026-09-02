@@ -29,7 +29,6 @@ class OrderCreateRequest extends FormRequest
     {
         return [
             'coupon_id'               => 'nullable|exists:Marvel\Database\Models\Coupon,id',
-            'shop_id'                 => 'nullable|exists:Marvel\Database\Models\Shop,id',
             'customer_id'             => 'nullable|exists:Marvel\Database\Models\User,id',
             'language'                => ['nullable', 'string'],
             'amount'                  => 'required|numeric',
@@ -44,9 +43,14 @@ class OrderCreateRequest extends FormRequest
             'card'                    => 'array',
             'token'                   => 'nullable|string',
             'use_wallet_points'       => 'nullable|boolean',
-            'shipping_address'        => 'array',
-            'billing_address'         => 'array',
-            'note'                    => 'nullable|string',
+            'shipping_address'                       => 'nullable|array',
+            'shipping_address.country'               => 'required_with:shipping_address.division_id|string|in:Bangladesh',
+            'shipping_address.division_id'           => 'required_with:shipping_address.country|integer|exists:bd_divisions,id',
+            'shipping_address.district_id'           => 'required_with:shipping_address.country|integer|exists:bd_districts,id',
+            'shipping_address.thana_id'              => 'required_with:shipping_address.country|integer|exists:bd_thanas,id',
+            'shipping_address.street_address'        => 'required_with:shipping_address.country|string',
+            'billing_address'                        => 'nullable|array',
+            'note'                                   => 'nullable|string',
         ];
     }
 

@@ -29,7 +29,6 @@ class StoreNoticeResource extends Resource
             'is_read'        => $this->is_read,
             'creator'        => ['id' => $this->creator->id, 'name' => $this->creator->name, 'email' => $this->creator->email],
             'users'          => getResourceCollection($this->users, ['email']),
-            'shops'          => getResourceCollection($this->shops),
             'read_status'    => $this->readStatusRecourseData($this->read_status),
         ];
     }

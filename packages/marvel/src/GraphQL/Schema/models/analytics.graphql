@@ -2,14 +2,12 @@ extend type Query {
     analytics: Analytics @field(resolver: "AnalyticsQuery@analytics")
     popularProducts(
         limit: Int
-        shop_id: ID
         range: Int
         type_id: ID
         type_slug: String
     ): [Product!]! @field(resolver: "AnalyticsQuery@popularProducts")
     bestSellingProducts(
         limit: Int
-        shop_id: ID
         range: Int
         type_id: ID
         type_slug: String
@@ -34,7 +32,6 @@ extend type Query {
         searchJoin: String = "and"
         search: String
         type_id: ID
-        shop_id: ID
     ): [Product!]! @field(resolver: "AnalyticsQuery@lowStockProducts")
     topRatedProducts(
         limit: Int!
@@ -62,8 +59,6 @@ type OrderByStatus {
 type Analytics {
     totalRevenue: Float
     totalRefunds: Float
-    totalShops: Int
-    totalVendors: Int
     todaysRevenue: Float
     totalOrders: Int
     newCustomers: Int
@@ -101,12 +96,10 @@ type TopRatedProduct {
 type CategoryWiseProduct {
     category_id: ID
     category_name: String
-    shop_name: String
     product_count: Int
 }
 type CategoryWiseProductSale {
     category_id: ID
     category_name: String
-    shop_name: String
     total_sales: Int
 }

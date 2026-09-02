@@ -12,6 +12,7 @@ use Marvel\Database\Models\Shipping;
 use Marvel\Database\Models\Settings;
 use Marvel\Database\Models\User;
 use Marvel\Database\Models\Variation;
+use Marvel\Database\Repositories\DeliveryZoneRepository;
 use Marvel\Traits\WalletsTrait;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -86,6 +87,10 @@ class CheckoutRepository
             if (!count($physical_products)) {
                 return 0;
             }
+            $shippingAddress = $request['shipping_address'] ?? null;
+            if (!empty($shippingAddress) && $this->hasLocationIds($shippingAddress)) {
+                return app(DeliveryZoneRepository::class)->resolveCharge($shippingAddress);
+            }
             $settings = Settings::getData();
             $class_id = $settings['options']['shippingClass'];
             if ($class_id) {
@@ -137,6 +142,11 @@ class CheckoutRepository
     {
         try {
             $product = Product::findOrFail($id);
+            // Pre-order with zero stock: allow purchase (unlimited allocation).
+            if ($product->is_preorder && (int) $product->quantity === 0) {
+                return false;
+            }
+            // Pre-order with positive stock: still enforce quantity cap.
             if ($order_quantity > $product->quantity) {
                 return $id;
             }
@@ -150,6 +160,10 @@ class CheckoutRepository
     {
         try {
             $variationOption = Variation::findOrFail($variation_id);
+            $product = Product::find($variationOption->product_id);
+            if ($product && $product->is_preorder && (int) $variationOption->quantity === 0) {
+                return false;
+            }
             if ($order_quantity > $variationOption->quantity) {
                 return $variationOption->product_id;
             }
@@ -213,5 +227,20 @@ class CheckoutRepository
     protected function getTotalTax($amount, $tax_class)
     {
         return ($amount * $tax_class->rate) / 100;
+    }
+
+    protected function hasLocationIds($address): bool
+    {
+        if (is_object($address) && method_exists($address, 'all')) {
+            $address = $address->all();
+        }
+        if (is_object($address)) {
+            $address = (array) $address;
+        }
+        if (!is_array($address)) {
+            return false;
+        }
+
+        return !empty($address['thana_id']) || !empty($address['district_id']) || !empty($address['division_id']);
     }
 }

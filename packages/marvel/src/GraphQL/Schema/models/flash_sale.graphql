@@ -98,11 +98,11 @@ input UpdateFlashSaleInput {
 extend type Mutation {
     createFlashSale(input: CreateFlashSaleInput! @spread): FlashSale
         @field(resolver: "FlashSaleMutator@storeFlashSale")
-        @can(ability: "store_owner")
+        @can(ability: "staff")
     updateFlashSale(input: UpdateFlashSaleInput! @spread): FlashSale
         @field(resolver: "FlashSaleMutator@updateFlashSale")
-        @can(ability: "store_owner")
+        @can(ability: "staff")
     deleteFlashSale(id: ID!): FlashSale
         @field(resolver: "FlashSaleMutator@deleteFlashSale")
-        @can(ability: "store_owner")
+        @can(ability: "staff")
 }

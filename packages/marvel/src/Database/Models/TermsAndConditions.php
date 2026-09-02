@@ -5,7 +5,6 @@ namespace Marvel\Database\Models;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Marvel\Database\Models\Shop;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Marvel\Traits\TranslationTrait;
@@ -45,13 +44,5 @@ class TermsAndConditions extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return BelongsTo
-     */
-    public function shop(): BelongsTo
-    {
-        return $this->belongsTo(Shop::class);
     }
 }

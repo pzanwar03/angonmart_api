@@ -41,31 +41,52 @@ class AttachmentController extends CoreController
      * @throws ValidatorException
      */
     public function store(AttachmentRequest $request)
-    {
-        $urls = [];
-        foreach ($request->attachment as $media) {
-            $attachment = new Attachment;
-            $attachment->save();
-            $attachment->addMedia($media)->toMediaCollection();
-            foreach ($attachment->getMedia() as $media) {
-                if (strpos($media->mime_type, 'image/') !== false) {
-                    $converted_url = [
-                        'thumbnail' => $media->getUrl('thumbnail'),
-                        'original' => $media->getUrl(),
-                        'id' => $attachment->id
-                    ];
-                } else {
-                    $converted_url = [
-                        'thumbnail' => '',
-                        'original' => $media->getUrl(),
-                        'id' => $attachment->id
-                    ];
-                }
+{
+    $urls = [];
+
+    foreach ($request->attachment as $media) {
+
+        $attachment = new Attachment;
+        $attachment->save();
+
+        // Generate professional filename
+        $extension = strtolower($media->getClientOriginalExtension());
+
+        $baseName = 'angonmart-media-' . now()->format('YmdHis') . '-' . uniqid();
+
+        $fileName = $baseName . '.' . $extension;
+
+        $attachment
+            ->addMedia($media)
+            ->usingFileName($fileName)
+            ->toMediaCollection();
+
+        foreach ($attachment->getMedia() as $mediaItem) {
+
+            if (strpos($mediaItem->mime_type, 'image/') !== false) {
+                $converted_url = [
+                    'thumbnail' => $mediaItem->getUrl('thumbnail'),
+                    'original' => $mediaItem->getUrl(),
+                    'id' => $attachment->id,
+                    'filename' => $mediaItem->file_name,
+                    'mime_type' => $mediaItem->mime_type,
+                ];
+            } else {
+                $converted_url = [
+                    'thumbnail' => '',
+                    'original' => $mediaItem->getUrl(),
+                    'id' => $attachment->id,
+                    'filename' => $mediaItem->file_name,
+                    'mime_type' => $mediaItem->mime_type,
+                ];
             }
-            $urls[] = $converted_url;
         }
-        return $urls;
+
+        $urls[] = $converted_url;
     }
+
+    return $urls;
+}
 
     /**
      * Display the specified resource.

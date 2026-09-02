@@ -41,35 +41,7 @@ class CouponController extends CoreController
     {
         try {
             $language = $request->language ?? DEFAULT_LANGUAGE;
-            $user = $request->user();
-            $query = $this->repository->whereNotNull('id')->with('shop');
-            if ($user) {
-                switch (true) {
-                    case $user->hasPermissionTo(Permission::SUPER_ADMIN):
-                        $query->where('language', $language);
-                        break;
-
-                    case $user->hasPermissionTo(Permission::STORE_OWNER):
-                        $this->repository->hasPermission($user, $request->shop_id)
-                            ? $query->where('shop_id', $request->shop_id)
-                            : $query->where('user_id', $user->id)->whereIn('shop_id', $user->shops->pluck('id'));
-                        $query->where('language', $language);
-                        break;
-
-                    case $user->hasPermissionTo(Permission::STAFF):
-                        $query->where('shop_id', $request->shop_id)->where('language', $language);
-                        break;
-
-                    default:
-                        $query->where('language', $language);
-                        break;
-                }
-            } else {
-                if ($request->shop_id) {
-                    $query->where('shop_id', $request->shop_id);
-                }
-                $query->where('language', $language);
-            }
+            $query = $this->repository->whereNotNull('id')->where('language', $language);
             return $query;
         } catch (MarvelException $e) {
             throw new MarvelException(SOMETHING_WENT_WRONG, $e->getMessage());
@@ -167,9 +139,6 @@ class CouponController extends CoreController
 
             if ($request->has('language') && $request['language'] === DEFAULT_LANGUAGE) {
                 $updatedCoupon = $request->only($dataArray);
-                if (!$request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
-                    $updatedCoupon['is_approve'] = false;
-                }
                 $nonTranslatableKeys = ['language', 'image', 'description', 'id'];
                 foreach ($nonTranslatableKeys as $key) {
                     if (isset($updatedCoupon[$key])) {
@@ -198,36 +167,6 @@ class CouponController extends CoreController
             return $this->repository->findOrFail($id)->delete();
         } catch (MarvelException $e) {
             throw new MarvelException(NOT_FOUND);
-        }
-    }
-
-    public function approveCoupon(Request $request)
-    {
-
-        try {
-            if (!$request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
-                throw new MarvelException(NOT_AUTHORIZED);
-            }
-            $coupon = $this->repository->findOrFail($request->id);
-            $coupon->update(['is_approve' => true]);
-            return $coupon;
-        } catch (MarvelException $th) {
-            throw new MarvelException(SOMETHING_WENT_WRONG);
-        }
-    }
-
-    public function disApproveCoupon(Request $request)
-    {
-        try {
-            if (!$request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
-                throw new MarvelException(NOT_AUTHORIZED);
-            }
-            $coupon = $this->repository->findOrFail($request->id);
-            $coupon->is_approve = false;
-            $coupon->save();
-            return $coupon;
-        } catch (MarvelException $th) {
-            throw new MarvelException(SOMETHING_WENT_WRONG);
         }
     }
 }

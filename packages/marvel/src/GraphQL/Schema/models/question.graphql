@@ -1,13 +1,11 @@
 extend type Query {
     questions(
         product_id: ID @eq
-        shop_id: ID @eq
         question: String @where(operator: "like", key: "question")
         answer: String = "null" @where(operator: "!=", key: "answer")
         orderBy: _ @orderBy(columns: ["created_at"])
     ): [Question!]! @paginate(defaultCount: 15)
     all_questions(
-        shop_id: ID @eq
         orderBy: _ @orderBy(columns: ["created_at", "id"])
     ): [Question!]! @paginate(defaultCount: 15)
     myQuestions(
@@ -24,8 +22,6 @@ type Question {
     user_id: ID
     product: Product @belongsTo
     product_id: ID
-    shop: Shop @belongsTo
-    shop_id: ID
     feedbacks: [Feedback] @morphMany
     positive_feedbacks_count: Int
     negative_feedbacks_count: Int
@@ -38,7 +34,6 @@ type Question {
 input CreateQuestionInput {
     question: String! @rules(apply: ["required", "max:255"])
     product_id: ID! @rules(apply: ["required", "exists:products,id"])
-    shop_id: ID! @rules(apply: ["required", "exists:shops,id"])
 }
 
 input UpdateQuestionInput {

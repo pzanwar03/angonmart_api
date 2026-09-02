@@ -50,8 +50,27 @@ return [
     ],
 
     'messagebird' => [
-        'api_key' => env('MESSAGEBIRD_API_KEY'),
-        'originator' => env('MESSAGEBIRD_ORIGINATOR')
-    ]
+        'api_key'    => env('MESSAGEBIRD_API_KEY'),
+        'originator' => env('MESSAGEBIRD_ORIGINATOR'),
+    ],
+
+    'sendmysms' => [
+        'url'         => env('SENDMYSMS_URL', 'https://sendmysms.net/api.php'),
+        'user'        => env('SENDMYSMS_USER'),
+        'key'         => env('SENDMYSMS_KEY'),
+        'otp_length'  => env('OTP_LENGTH', 6),
+        'otp_ttl'     => env('OTP_TTL', 300),
+        'otp_message' => env('OTP_MESSAGE', 'Your verification code is :code'),
+    ],
+
+    'smsgatewaybd' => [
+        'base_url'    => env('SMSGATEWAYBD_URL', 'https://api.smsgateway.com.bd/api'),
+        'client_id'   => env('SMSGATEWAYBD_CLIENT_ID'),
+        'key'         => env('SMSGATEWAYBD_KEY'),
+        'sender_id'   => env('SMSGATEWAYBD_SENDER_ID'),
+        'otp_length'  => env('OTP_LENGTH', 6),
+        'otp_ttl'     => env('OTP_TTL', 300),
+        'otp_message' => env('OTP_MESSAGE', 'Your verification code is :code'),
+    ],
 
 ];

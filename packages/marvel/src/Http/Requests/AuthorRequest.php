@@ -31,7 +31,6 @@ class AuthorRequest extends FormRequest
             'name' => ['required', 'string'],
             'slug'        => ['nullable', 'string'],
             'bio' => ['nullable', 'string'],
-            'shop_id'     => ['nullable', 'exists:Marvel\Database\Models\Shop,id'],
             'image' => ['array'],
             'cover_image' => ['array'],
             'is_approved' => ['boolean'],

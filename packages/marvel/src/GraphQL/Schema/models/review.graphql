@@ -1,7 +1,6 @@
 extend type Query {
     reviews(
         product_id: ID @eq
-        shop_id: ID @eq
         rating: Int @eq
         orderBy: _ @orderBy(columns: ["created_at", "rating", "id"])
     ): [Review!]! @paginate(defaultCount: 15)
@@ -19,8 +18,6 @@ type Review {
     product: Product @belongsTo
     product_id: ID
     variation_option_id: ID
-    shop: Shop @belongsTo
-    shop_id: ID
     feedbacks: [Feedback] @morphMany
     positive_feedbacks_count: Int
     negative_feedbacks_count: Int
@@ -36,7 +33,6 @@ input CreateReviewInput {
     product_id: ID! @rules(apply: ["required", "exists:products,id"])
     order_id: ID! @rules(apply: ["required", "exists:orders,id"])
     variation_option_id: ID @rules(apply: ["exists:variation_options,id"])
-    shop_id: ID! @rules(apply: ["required"])
     rating: Int! @rules(apply: ["required", "integer", "min:1", "max:5"])
     photos: [AttachmentInput]
 }

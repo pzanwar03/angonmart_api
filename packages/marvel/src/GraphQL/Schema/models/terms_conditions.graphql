@@ -5,7 +5,6 @@ extend type Query {
         sortedBy: String
         language: String
         searchJoin: String = "AND"
-        shop_id: ID
         type: String
         issued_by: String
         is_approved: Boolean
@@ -23,7 +22,6 @@ extend type Query {
 
 type TermsAndConditions {
     id: ID
-    shop_id: ID
     title: String
     slug: String
     description: String
@@ -43,7 +41,6 @@ input CreateTermsConditionsInput {
         )
     slug: String
     user_id: ID
-    shop_id: ID
     type: String
     issued_by: String
     language: String
@@ -59,7 +56,6 @@ input UpdateTermsConditionsInput {
         )
     slug: String
     user_id: ID
-    shop_id: ID
     type: String
     is_approved: Boolean
     issued_by: String
@@ -77,8 +73,4 @@ extend type Mutation {
         @field(resolver: "TermsConditionsMutator@updateTermsConditions")
     deleteTermsConditions(id: ID!): TermsAndConditions
         @field(resolver: "TermsConditionsMutator@deleteTermsConditions")
-    approveTermsConditions(id: ID!): TermsAndConditions
-        @field(resolver: "TermsConditionsMutator@approveTerm")
-    disApproveTermsConditions(id: ID!): TermsAndConditions
-        @field(resolver: "TermsConditionsMutator@disApproveTerm")
 }

@@ -52,7 +52,7 @@ class RefundPolicyController extends CoreController
     public function store(StoreRefundPolicyRequest $request)
     {
         try {
-            if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+            if ($this->repository->hasPermission($request->user())) {
                 return $this->repository->storeRefundPolicy($request);
             }
             throw new AuthorizationException(NOT_AUTHORIZED);
@@ -116,7 +116,7 @@ class RefundPolicyController extends CoreController
     {
         $slug = $request->id ?? $request->slug;
         $language = $request->language ?? DEFAULT_LANGUAGE;
-        if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+        if ($this->repository->hasPermission($request->user())) {
             try {
                 $refundPolicy = $this->repository->findRefundPolicy($slug, $language);
                 return $this->repository->updateRefundPolicy($request, $refundPolicy);

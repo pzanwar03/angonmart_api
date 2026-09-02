@@ -144,7 +144,7 @@ class FlashSaleController extends CoreController
     {
         try {
             $user = $request->user();
-            if ($user && ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STORE_OWNER) || $user->hasPermissionTo(Permission::STAFF))) {
+            if ($user && ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF))) {
                 $flashSale = $this->repository->findOrFail($request->id);
                 $flashSale->delete();
                 return $flashSale;

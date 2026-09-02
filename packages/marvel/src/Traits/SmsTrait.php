@@ -6,7 +6,6 @@ use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Marvel\Database\Models\Profile;
 use Marvel\Database\Models\Settings;
 use Marvel\Database\Models\User;
 use Marvel\Enums\EventType;
@@ -56,7 +55,7 @@ trait SmsTrait
             $smsGateway = $this->getOtpGateway();
             $userType = $this->getWhichUserWillGetSms($smsArray['smsEventName'], $smsArray['language']);
 
-            if ($userType['customer'] && $order->parent_id == null) {
+            if ($userType['customer']) {
                 $smsGateway->sendSms($order->customer_contact, $smsArray['customerMessage']);
                 /* $customer = $order->customer;
                  if ($customer && $customer->profile && $customer->profile->contact) {
@@ -71,29 +70,6 @@ trait SmsTrait
                 foreach ($adminList as $admin) {
                     $adminProfile = $admin->profile;
                     if ($adminProfile) $smsGateway->sendSms($adminProfile->contact, $smsArray['adminMessage']);
-                }
-            }
-            if ($userType['vendor']) {
-                $message = $smsArray['storeOwnerMessage'];
-                if ($order->parent_id == null) {
-                    if (!$shouldSendToChildOrder) {
-                        return;
-                    }
-                    $childOrders = $order->children;
-
-
-                    foreach ($childOrders as $childOrder) {
-                        $storeOwner = $childOrder->shop->owner;
-                        $shopOwnerProfile = Profile::where('customer_id', $storeOwner->id)->firstOrFail();
-
-                        if ($shopOwnerProfile)
-                            $smsGateway->sendSms($shopOwnerProfile->contact, str_replace(':ORDER_TRACKING_NUMBER', $childOrder->tracking_number, $message));
-                    }
-                } else {
-                    $storeOwner = $order->shop->owner;
-                    $storeOwnerProfile = $storeOwner->profile;
-                    if ($storeOwnerProfile && $storeOwnerProfile->contact)
-                        $smsGateway->sendSms($storeOwnerProfile->contact, str_replace(':ORDER_TRACKING_NUMBER', $order->tracking_number, $message));
                 }
             }
         } catch (Exception $e) {
@@ -152,7 +128,7 @@ trait SmsTrait
         if (in_array($eventName, [EventType::ORDER_PAYMENT_FAILED, EventType::ORDER_PAYMENT_SUCCESS])) {
             $eventName = EventType::ORDER_PAYMENT;
         }
-        $userArray = ['customer' => false, 'admin' => false, 'vendor' => false];
+        $userArray = ['customer' => false, 'admin' => false];
         $settings = Settings::getData($language);
         if (!isset($settings->options[$eventType])) return $userArray;
         $options = $settings->options;

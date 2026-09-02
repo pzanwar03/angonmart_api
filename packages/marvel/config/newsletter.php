@@ -1,19 +1,27 @@
 <?php
 
+$newsletterApiKey = env('NEWSLETTER_API_KEY');
+$hasMailchimpApiKey = is_string($newsletterApiKey) && str_contains($newsletterApiKey, '-');
+
 return [
 
     /*
      * The driver to use to interact with MailChimp API.
-     * You may use "log" or "null" to prevent calling the
-     * API directly from your environment.
+     * MailChimp is used only when NEWSLETTER_API_KEY looks valid
+     * (keys include a datacenter suffix, e.g. xxxx-us21).
      */
-    'driver' => env('NEWSLETTER_DRIVER', Spatie\Newsletter\Drivers\MailChimpDriver::class),
+    'driver' => env(
+        'NEWSLETTER_DRIVER',
+        $hasMailchimpApiKey
+            ? Spatie\Newsletter\Drivers\MailChimpDriver::class
+            : Marvel\Newsletter\NullDriver::class
+    ),
 
     /**
      * These arguments will be given to the driver.
      */
     'driver_arguments' => [
-        'api_key' => env('NEWSLETTER_API_KEY'),
+        'api_key' => $newsletterApiKey,
 
         'endpoint' => env('NEWSLETTER_ENDPOINT'),
     ],

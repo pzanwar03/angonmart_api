@@ -68,13 +68,8 @@
 </head>
 
 <body class="welcome">
-    <h1>Marvel Laravel</h1>
-    <ul>
-        <li><a href="https://pickbazarapi.redq.io/front/playground">GraphQL Playground</a></li>
-        <li><a href="https://pickbazar-doc.vercel.app/">Documentation</a></li>
-        <li><a href="http://redqsupport.ticksy.com/">Support</a></li>
-        <li><a href="https://redq.io/">Contact</a></li>
-    </ul>
+    
+    
 </body>
 
 </html>

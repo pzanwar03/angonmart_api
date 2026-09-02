@@ -22,7 +22,6 @@ class ProductResource extends Resource
             'language'             => $this->language,
             'translated_languages' => $this->translated_languages,
             'product_type'         => $this->product_type,
-            'shop'                 => getResourceData($this->shop, []), // if you need extra data then pass key in array by second parameter
             'sale_price'           => $this->sale_price,
             'max_price'            => $this->max_price,
             'min_price'            => $this->min_price,
@@ -34,7 +33,8 @@ class ProductResource extends Resource
             'sku'                  => $this->sku,
             'sold_quantity'        => $this->sold_quantity,
             'in_flash_sale'        => $this->in_flash_sale,
-            'visibility'           => $this->visibility
+            'is_preorder'          => (bool) $this->is_preorder,
+            'preorder_available_at'=> $this->preorder_available_at,
         ];
     }
 }

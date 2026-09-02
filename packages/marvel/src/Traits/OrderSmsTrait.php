@@ -41,6 +41,32 @@ trait OrderSmsTrait
         $this->sendSmsOnOrderEvent($smsArray);
     }
 
+    /**
+     * Always send order-creation SMS regardless of DB settings toggles:
+     * - Customer receives a confirmation SMS.
+     * - Merchant (MERCHANT_CONTACT) receives a new-order alert SMS.
+     */
+    public function sendOrderCreationSmsAlways(Order $order): void
+    {
+        try {
+            App::setLocale($order->language ?? DEFAULT_LANGUAGE);
+            $gateway         = $this->getOtpGateway();
+            $customerMessage = __('sms.order.orderCreated.customer.message', ['ORDER_TRACKING_NUMBER' => $order->tracking_number]);
+            $merchantMessage = __('sms.order.orderCreated.admin.message', ['ORDER_TRACKING_NUMBER' => $order->tracking_number]);
+            $merchantContact = config('shop.merchant_contact');
+
+            if ($order->customer_contact) {
+                $gateway->sendSms($order->customer_contact, $customerMessage);
+            }
+
+            if ($merchantContact) {
+                $gateway->sendSms($merchantContact, $merchantMessage);
+            }
+        } catch (\Exception $e) {
+            info('sendOrderCreationSmsAlways failed: ' . $e->getMessage());
+        }
+    }
+
     public function sendPaymentDoneSuccessfullySms(Order $order): void
     {
         $language = $order->language;

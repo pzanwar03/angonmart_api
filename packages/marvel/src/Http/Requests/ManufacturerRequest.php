@@ -32,7 +32,6 @@ class ManufacturerRequest extends FormRequest
             'slug'        => ['nullable', 'string'],
             'description' => ['nullable', 'string', 'max:10000'],
             'type_id' => ['required', 'exists:Marvel\Database\Models\Type,id'],
-            'shop_id'     => ['nullable', 'exists:Marvel\Database\Models\Shop,id'],
             'image' => ['array'],
             'language'     => ['nullable', 'string'],
             'cover_image' => ['array'],

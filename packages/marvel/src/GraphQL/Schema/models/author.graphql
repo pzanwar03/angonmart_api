@@ -23,7 +23,7 @@ type Author {
     born: String
     death: String
     languages: String
-    socials: [ShopSocials]
+    socials: [Social]
     image: Attachment
     cover_image: Attachment
     created_at: DateTime
@@ -39,8 +39,7 @@ input CreateAuthorInput {
     born: String
     death: String
     languages: String
-    socials: [ShopSocialInput]
-    shop_id: ID @rules(apply: ["exists:shops,id"])
+    socials: [SocialInput]
     image: AttachmentInput
     cover_image: AttachmentInput
     slug: String
@@ -51,13 +50,12 @@ input UpdateAuthorInput {
     slug: String!
     language: String
     is_approved: Boolean
-    shop_id: ID @rules(apply: ["exists:shops,id"])
     bio: String
     quote: String
     born: String
     death: String
     languages: String
-    socials: [ShopSocialInput]
+    socials: [SocialInput]
     image: AttachmentInput
     cover_image: AttachmentInput
 }

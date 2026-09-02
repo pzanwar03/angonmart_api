@@ -41,7 +41,7 @@ class SendConversationReminder implements ShouldQueue
         if('user' === $this->participant->type) {
             Mail::to($this->participant->user->email)->send($email);
         } else {
-            Mail::to($this->participant->shop->owner->email)->send($email);
+            Mail::to(config('shop.admin_email'))->send($email);
         }
 
         $this->participant->notify = 1;

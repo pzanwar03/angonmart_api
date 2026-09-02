@@ -25,12 +25,4 @@ class CouponMutator
     {
         return Shop::call('Marvel\Http\Controllers\CouponController@updateCoupon', $args);
     }
-    public function approveCoupon($rootValue, array $args, GraphQLContext $context)
-    {
-        return Shop::call('Marvel\Http\Controllers\CouponController@approveCoupon', $args);
-    }
-    public function disApproveCoupon($rootValue, array $args, GraphQLContext $context)
-    {
-        return Shop::call('Marvel\Http\Controllers\CouponController@disApproveCoupon', $args);
-    }
 }

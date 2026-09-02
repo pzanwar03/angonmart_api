@@ -6,7 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
-use Marvel\Database\Models\Shop;
 use Marvel\Enums\RefundPolicyStatus;
 use Marvel\Enums\RefundPolicyTarget;
 
@@ -35,7 +34,6 @@ class UpdateRefundPolicyRequest extends FormRequest
             'status'      => ['string', 'max:255', Rule::in(RefundPolicyStatus::getValues())],
             'slug'        => ['nullable', 'string', 'max: 255'],
             'description' => ['nullable', 'string', 'max:10000'],
-            'shop_id'     => ['nullable', 'exists:' . Shop::class . ',id'],
             'language'    => ['nullable', 'string'],
         ];
     }

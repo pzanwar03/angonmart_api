@@ -16,6 +16,7 @@ class Review extends Model
 
     protected $casts = [
         'photos' => 'json',
+        'is_verified' => 'boolean',
     ];
 
     protected $appends = [

@@ -42,7 +42,6 @@ use Marvel\Enums\ManufacturerType;
 use Marvel\Enums\OrderStatus;
 use Marvel\Enums\ProductType;
 use Marvel\Enums\RefundStatus;
-use Marvel\Enums\WithdrawStatus;
 use Marvel\Enums\PaymentGatewayType;
 use Marvel\Enums\PaymentStatus;
 use Marvel\Enums\ProductStatus;
@@ -80,7 +79,6 @@ class ShopServiceProvider extends ServiceProvider
         StoreNoticePriority::class,
         ShippingType::class,
         ProductType::class,
-        WithdrawStatus::class,
         RefundStatus::class,
         PaymentGatewayType::class,
         ManufacturerType::class,
@@ -131,6 +129,7 @@ class ShopServiceProvider extends ServiceProvider
      */
     public function boot(TypeRegistry $typeRegistry): void
     {
+        $this->stripRemovedEagerLoadsFromRequest();
         $this->loadServiceProviders();
         $this->loadMiddleware();
         $this->bootConsole();
@@ -208,6 +207,11 @@ class ShopServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Ensure new gateway classes are always loaded regardless of whether
+        // the server's optimized classmap has been regenerated.
+        require_once __DIR__ . '/Otp/Gateways/SendmysmsGateway.php';
+        require_once __DIR__ . '/Otp/Gateways/SmsgatewaybdGateway.php';
+        require_once __DIR__ . '/Database/Models/OtpVerification.php';
 
         $this->mergeConfigFrom(__DIR__ . '/../config/shop.php', 'shop');
 
@@ -313,5 +317,46 @@ class ShopServiceProvider extends ServiceProvider
         foreach ($this->routeMiddleware as $alias => $middleware) {
             $this->app->router->aliasMiddleware($alias, $middleware);
         }
+    }
+
+    /**
+     * Drop multivendor-only eager-load relations from API `with` params.
+     */
+    protected function stripRemovedEagerLoadsFromRequest(): void
+    {
+        if ($this->app->runningInConsole()) {
+            return;
+        }
+
+        $withParam = config('repository.criteria.params.with', 'with');
+        $with = request()->get($withParam);
+
+        if (!$with) {
+            return;
+        }
+
+        $removed = ['shop', 'product.shop'];
+        $relations = array_values(array_filter(
+            explode(';', $with),
+            function (string $relation) use ($removed) {
+                $relation = trim($relation);
+
+                if ($relation === '' || in_array($relation, $removed, true)) {
+                    return false;
+                }
+
+                foreach ($removed as $item) {
+                    if (str_starts_with($relation, $item . '.')) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        ));
+
+        request()->merge([
+            $withParam => $relations ? implode(';', $relations) : null,
+        ]);
     }
 }

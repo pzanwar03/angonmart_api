@@ -24,7 +24,6 @@ class RefundPolicyResource extends Resource
             'description'          => $this->description,
             'language'             => $this->language,
             'translated_languages' => $this->translated_languages,
-            'shop'                 => new ShopResource($this->whenLoaded('shop')),
             'refunds'              => RefundResource::collection($this->whenLoaded('refunds')),
         ];
     }

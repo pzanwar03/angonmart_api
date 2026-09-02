@@ -10,7 +10,7 @@
             font-family: Arial, DejaVu Sans, sans-serif;
         }
     </style>
-    @if($language === "bd")
+    @if($language === "bn")
     <style >
         body {
             font-family: Arial, DejaVu Sans, sans-serif, bangla;

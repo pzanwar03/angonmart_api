@@ -6,6 +6,7 @@ namespace Marvel\Http\Requests;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 
 class LanguageRequest extends FormRequest
@@ -29,7 +30,7 @@ class LanguageRequest extends FormRequest
     {
         return [
             'language_name'     => ['required', 'string'],
-            'language_code'     => ['required', 'string'],
+            'language_code'     => ['required', 'string', Rule::in(['en', 'bn'])],
             'flag'              => ['required', 'string'],
         ];
     }

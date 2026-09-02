@@ -1,7 +1,6 @@
 extend type Query {
     storeNotices(
         text: String @where(operator: "like", key: "notice")
-        shop_id: ID
         language: String
         id: ID @where(operator: "=", key: "id")
         orderBy: String
@@ -43,7 +42,6 @@ type StoreNotice {
     creator_role: String
     creator: User @belongsTo
     users: [User] @belongsToMany
-    shops: [Shop] @belongsToMany
     read_status: [StoreNoticeRead!] @belongsToMany
 }
 
@@ -99,13 +97,13 @@ type Success {
 extend type Mutation {
     createStoreNotice(input: CreateStoreNoticeInput! @spread): StoreNotice
         @field(resolver: "StoreNoticeMutator@createStoreNotice")
-        @can(ability: "store_owner")
+        @can(ability: "staff")
     updateStoreNotice(input: UpdateStoreNoticeInput! @spread): StoreNotice
         @field(resolver: "StoreNoticeMutator@updateStoreNotice")
-        @can(ability: "store_owner")
+        @can(ability: "staff")
     readNotice(input: ReadSingleNoticeInput! @spread): StoreNoticeUserPivot
         @field(resolver: "StoreNoticeMutator@readNotice")
     readAllNotice(input: ReadAllNoticeInput! @spread): [StoreNoticeUserPivot]!
         @field(resolver: "StoreNoticeMutator@readAllNotice")
-    deleteStoreNotice(id: ID!): StoreNotice @delete @can(ability: "store_owner")
+    deleteStoreNotice(id: ID!): StoreNotice @delete @can(ability: "staff")
 }

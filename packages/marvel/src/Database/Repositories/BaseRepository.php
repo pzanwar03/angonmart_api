@@ -6,7 +6,6 @@ namespace Marvel\Database\Repositories;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Marvel\Database\Models\Shop;
 use Marvel\Enums\Permission;
 use Marvel\Exceptions\MarvelException;
 use Prettus\Repository\Contracts\CacheableInterface;
@@ -169,29 +168,21 @@ abstract class BaseRepository extends Repository implements CacheableInterface
         return $this->model;
     }
 
+    /**
+     * Single-vendor site: there is only one store, managed by any
+     * super_admin or staff account, so this is now a plain role check.
+     * The $shop_id parameter is kept (unused) for call-site compatibility.
+     *
+     * @param mixed $user
+     * @param mixed $shop_id unused, kept for backwards compatibility
+     * @return bool
+     */
     public function hasPermission($user, $shop_id = null)
     {
-        if ($user && $user->hasPermissionTo(Permission::SUPER_ADMIN)) {
-            return true;
-        }
-        try {
-            $shop = Shop::findOrFail($shop_id);
-        } catch (Exception $e) {
+        if (!$user) {
             return false;
         }
-        if (!$shop->is_active) {
-            throw new MarvelException(SHOP_NOT_APPROVED);
-        }
-        if ($user &&  $user->hasPermissionTo(Permission::STORE_OWNER)) {
-            if ($shop->owner_id === $user->id) {
-                return true;
-            }
-        } elseif ($user &&  $user->hasPermissionTo(Permission::STAFF)) {
-            if ($shop->staffs->contains($user)) {
-                return true;
-            }
-        }
-        return false;
+        return $user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF);
     }
 
     function csvToArray($filename = '', $delimiter = ',')

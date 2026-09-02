@@ -14,6 +14,7 @@ use Marvel\Database\Models\Message;
 use Marvel\Database\Models\Participant;
 use Marvel\Database\Repositories\ConversationRepository;
 use Marvel\Database\Repositories\MessageRepository;
+use Marvel\Enums\Permission;
 use Marvel\Exceptions\MarvelException;
 use Marvel\Http\Requests\MessageCreateRequest;
 use Prettus\Validator\Exceptions\ValidatorException;
@@ -43,7 +44,8 @@ class MessageController extends CoreController
 
         $user = Auth::user();
         $conversation = $this->conversationRepository->findOrFail($conversation_id);
-        abort_unless($user->shop_id === $conversation->shop_id || in_array( $conversation->shop_id, $user->shops->pluck('id')->toArray()) || $user->id === $conversation->user_id, 404, 'Unauthorized');
+        $isStaff = $user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF);
+        abort_unless($isStaff || $user->id === $conversation->user_id, 404, 'Unauthorized');
 
         $messages = $this->fetchMessages($request);
 
@@ -68,14 +70,14 @@ class MessageController extends CoreController
             ->update(['last_read' => new Carbon()]);
 
         if(0 === $participant) {
-            $participant = Participant::where('conversation_id', $conversation_id)
-                ->whereNull('last_read')
-                ->where(function($query){
-                    $query->whereIn('shop_id', auth()->user()->shops->pluck('id'));
-                    $query->orWhere('shop_id', auth()->user()->shop_id);
-                    $query->where('type', 'shop');
-                })
-                ->update(['last_read' => new Carbon()]);
+            $user = auth()->user();
+            $isStaff = $user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF);
+            if ($isStaff) {
+                $participant = Participant::where('conversation_id', $conversation_id)
+                    ->whereNull('last_read')
+                    ->where('type', 'shop')
+                    ->update(['last_read' => new Carbon()]);
+            }
         }
 
         return $participant;
@@ -88,18 +90,19 @@ class MessageController extends CoreController
         $conversation_id = $request->conversation_id;
 
         try {
-            $conversation = Conversation::where('id', $conversation_id)
-                ->where('user_id', $user->id)
-                ->orWhereIn('shop_id', $user->shops()->pluck('id'))
-                ->orWhere('shop_id', $user->shop_id)
-                ->with(['user', 'shop'])->first();
+            $isStaff = $user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF);
+            $conversationQuery = Conversation::where('id', $conversation_id);
+            if (!$isStaff) {
+                $conversationQuery->where('user_id', $user->id);
+            }
+            $conversation = $conversationQuery->with(['user'])->first();
 
             if(empty($conversation)) {
                 throw new MarvelException(NOT_AUTHORIZED);
             }
 
             return $this->repository->where('conversation_id', $conversation_id)
-                ->with(['conversation.shop', 'conversation.user.profile'])
+                ->with(['conversation.user.profile'])
                 ->orderBy('id', 'DESC');
         } catch (\Exception $e) {
             throw new MarvelException(NOT_AUTHORIZED);

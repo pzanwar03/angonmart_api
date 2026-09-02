@@ -9,7 +9,6 @@ extend type Query {
         product_type: String
         flash_sale_builder: Boolean
         status: String
-        shop_id: String
         searchedByUser: String
         author: String
         manufacturer: String
@@ -58,7 +57,6 @@ extend type Query {
         search: String
         name: String
         type_id: ID
-        shop_id: ID
         orderBy: String
         sortedBy: String
     ): [Product!]!
@@ -73,7 +71,6 @@ extend type Query {
         search: String
         name: String
         type_id: ID
-        shop_id: ID
         orderBy: String
         sortedBy: String
     ): [Product!]!
@@ -88,7 +85,6 @@ extend type Query {
         search: String
         name: String
         type_slug: String
-        shop_id: ID
         orderBy: String
         sortedBy: String
     ): [Product!]!
@@ -190,10 +186,8 @@ type Product {
     variation_options: [Variation] @hasMany
     pivot: OrderProductPivot
     orders: [Order] @belongsToMany
-    shop: Shop @belongsTo
     author: Author @belongsTo
     manufacturer: Manufacturer @belongsTo
-    shop_id: ID
     author_id: ID
     manufacturer_id: ID
     related_products(limit: Int): [Product]
@@ -203,6 +197,8 @@ type Product {
     blocked_dates: [String]
     description: String
     in_stock: Boolean
+    is_preorder: Boolean
+    preorder_available_at: DateTime
     is_taxable: Boolean
     is_digital: Boolean
     is_external: Boolean
@@ -220,6 +216,7 @@ type Product {
     gallery: [Attachment]
     image: Attachment
     video: [Video]
+    video_file: Attachment
     status: ProductStatus!
     height: String
     length: String
@@ -284,7 +281,6 @@ input CreateProductInput {
     slug: String
     name: String! @rules(apply: ["required", "max:255"])
     type_id: ID! @rules(apply: ["required", "exists:types,id"])
-    shop_id: ID! @rules(apply: ["required", "exists:shops,id"])
     author_id: ID @rules(apply: ["exists:authors,id"])
     manufacturer_id: ID @rules(apply: ["exists:manufacturers,id"])
     price: Float
@@ -307,6 +303,8 @@ input CreateProductInput {
     variations: [AttributeProductPivot]
     variation_options: UpsertVariationsHasMany
     in_stock: Boolean
+    is_preorder: Boolean
+    preorder_available_at: DateTime
     is_taxable: Boolean
     is_digital: Boolean
     is_external: Boolean
@@ -317,6 +315,7 @@ input CreateProductInput {
     gallery: [AttachmentInput]
     image: AttachmentInput
     video: [VideoInput]
+    video_file: AttachmentInput
     status: ProductStatus
     height: String
     length: String
@@ -328,7 +327,6 @@ input UpdateProductInput {
     name: String! @rules(apply: ["required", "max:255"])
     slug: String
     type_id: ID! @rules(apply: ["required", "exists:types,id"])
-    shop_id: ID! @rules(apply: ["required", "exists:shops,id"])
     author_id: ID @rules(apply: ["exists:authors,id"])
     manufacturer_id: ID @rules(apply: ["exists:manufacturers,id"])
     price: Float
@@ -350,6 +348,8 @@ input UpdateProductInput {
     variations: [AttributeProductPivot]
     variation_options: UpsertVariationsHasMany
     in_stock: Boolean
+    is_preorder: Boolean
+    preorder_available_at: DateTime
     is_taxable: Boolean
     is_digital: Boolean
     is_external: Boolean
@@ -360,6 +360,7 @@ input UpdateProductInput {
     gallery: [AttachmentInput]
     image: AttachmentInput
     video: [VideoInput]
+    video_file: AttachmentInput
     status: ProductStatus!
     height: String
     length: String
@@ -399,8 +400,8 @@ extend type Mutation {
     calculateRentalPrice(
         input: calculateRentalPriceInput! @spread
     ): PriceBreakdown @field(resolver: "ProductMutator@calculateRentalPrice")
-    importProducts(shop_id: ID! @spread, csv: Upload!): Boolean
+    importProducts(csv: Upload!): Boolean
         @field(resolver: "ProductMutator@importProducts")
-    importVariationOptions(shop_id: ID! @spread, csv: Upload!): Boolean
+    importVariationOptions(csv: Upload!): Boolean
         @field(resolver: "ProductMutator@importVariationOptions")
 }

@@ -27,8 +27,27 @@ class AttachmentRequest extends FormRequest
      */
     public function rules()
     {
+        $maxKilobytes = 50 * 1024; // 50MB
+
         return [
-            'attachment'        => ['required'],
+            'attachment'   => ['required'],
+            'attachment.*' => [
+                'file',
+                'max:' . $maxKilobytes,
+                function ($attribute, $value, $fail) {
+                    if (!$value || !method_exists($value, 'getMimeType')) {
+                        return;
+                    }
+                    $mime = (string) $value->getMimeType();
+                    if (str_starts_with($mime, 'video/') && !in_array($mime, [
+                        'video/mp4',
+                        'video/webm',
+                        'video/quicktime',
+                    ], true)) {
+                        $fail('Unsupported video format. Allowed: mp4, webm, mov.');
+                    }
+                },
+            ],
         ];
     }
 

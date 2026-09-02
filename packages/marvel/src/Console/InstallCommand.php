@@ -65,6 +65,12 @@ class InstallCommand extends Command
             );
 
             info('Settings import is completed.');
+
+            info('Importing Bangladesh location data...');
+            $this->call('db:seed', [
+                '--class' => '\\Marvel\\Database\\Seeders\\BdLocationSeeder',
+            ]);
+            info('Bangladesh location data import is completed.');
         } else {
             info('Do you want to seed dummy Settings data?');
             info('If "yes", then please follow next steps carefully.');
@@ -77,16 +83,13 @@ class InstallCommand extends Command
 
         Permission::firstOrCreate(['name' => UserPermission::SUPER_ADMIN]);
         Permission::firstOrCreate(['name' => UserPermission::CUSTOMER]);
-        Permission::firstOrCreate(['name' => UserPermission::STORE_OWNER]);
         Permission::firstOrCreate(['name' => UserPermission::STAFF]);
 
-        $superAdminPermissions = [UserPermission::SUPER_ADMIN, UserPermission::STORE_OWNER, UserPermission::CUSTOMER];
-        $storeOwnerPermissions = [UserPermission::STORE_OWNER, UserPermission::CUSTOMER];
+        $superAdminPermissions = [UserPermission::SUPER_ADMIN, UserPermission::STAFF, UserPermission::CUSTOMER];
         $staffPermissions = [UserPermission::STAFF, UserPermission::CUSTOMER];
         $customerPermissions = [UserPermission::CUSTOMER];
 
         Role::firstOrCreate(['name' => UserRole::SUPER_ADMIN])->syncPermissions($superAdminPermissions);
-        Role::firstOrCreate(['name' => UserRole::STORE_OWNER])->syncPermissions($storeOwnerPermissions);
         Role::firstOrCreate(['name' => UserRole::STAFF])->syncPermissions($staffPermissions);
         Role::firstOrCreate(['name' => UserRole::CUSTOMER])->syncPermissions($customerPermissions);
 

@@ -21,7 +21,6 @@ class OrderUpdateRequest extends FormRequest
     {
         return [
             'coupon_id'       => 'nullable|exists:Marvel\Database\Models\Coupon,id',
-            'shop_id'         => 'exists:Marvel\Database\Models\Shop,id',
             'products'        => 'array',
             'amount'          => 'numeric',
             'paid_total'      => 'numeric',

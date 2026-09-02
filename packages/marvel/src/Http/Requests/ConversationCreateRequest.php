@@ -27,9 +27,7 @@ class ConversationCreateRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'shop_id' => ['required', 'exists:Marvel\Database\Models\Shop,id'],
-        ];
+        return [];
     }
 
     public function failedValidation(Validator $validator)

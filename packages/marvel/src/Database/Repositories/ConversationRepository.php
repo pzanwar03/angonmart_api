@@ -16,7 +16,6 @@ class ConversationRepository extends BaseRepository
 {
 
     protected $fieldSearchable = [
-        'shop.name' => 'like',
         'user.name' => 'like',
     ];
 

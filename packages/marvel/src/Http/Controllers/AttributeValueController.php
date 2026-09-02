@@ -45,7 +45,7 @@ class AttributeValueController extends CoreController
     public function store(AttributeValueRequest $request)
     {
         try {
-            if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+            if ($this->repository->hasPermission($request->user())) {
                 $validatedData = $request->validated();
                 return $this->repository->create($validatedData);
             }
@@ -88,7 +88,7 @@ class AttributeValueController extends CoreController
     }
     public function updateAttributeValues(AttributeValueRequest $request)
     {
-        if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+        if ($this->repository->hasPermission($request->user())) {
             try {
                 $validatedData = $request->except('id');
                 return $this->repository->findOrFail($request->id)->update($validatedData);
@@ -122,8 +122,7 @@ class AttributeValueController extends CoreController
      */
     public function destroyAttributeValues(Request $request)
     {
-        $shop_id = $this->repository->findOrFail($request->id)->attribute->shop_id;
-        if ($this->repository->hasPermission($request->user(), $shop_id)) {
+        if ($this->repository->hasPermission($request->user())) {
             $attributesValue =  $this->repository->findOrFail($request->id);
             $attributesValue->delete();
             return $attributesValue;

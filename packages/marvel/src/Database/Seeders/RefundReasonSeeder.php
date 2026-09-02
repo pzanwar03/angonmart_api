@@ -83,88 +83,88 @@ class RefundReasonSeeder extends Seeder
                 'updated_at' => Carbon::now(),
                 'deleted_at' => null,
             ],
-            ...$this->getGermanDummyData()
+            ...$this->getBanglaDummyData()
         ]);
     }
 
     /**
-     * getGermanDummyData
+     * getBanglaDummyData
      *
      * @return array
      */
-    private function getGermanDummyData(): array
+    private function getBanglaDummyData(): array
     {
 
         if (!TRANSLATION_ENABLED) {
             return [];
-        } else {
-            return [
-                [
-                    "name" => "Produkt nicht wie beschrieben",
-                    "slug" => "produkt-nicht-wie-beschrieben",
-                    "language" => "de",
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'deleted_at' => null,
-                ],
-                [
-                    "name" => "Falscher Artikel geliefert",
-                    "slug" => "falscher-artikel-geliefert",
-                    "language" => "de",
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'deleted_at' => null,
-                ],
-                [
-                    "name" => "Beschädigter Artikel",
-                    "slug" => "beschädigter-artikel",
-                    "language" => "de",
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'deleted_at' => null,
-                ],
-                [
-                    "name" => "Bestellung storniert",
-                    "slug" => "bestellung-storniert",
-                    "language" => "de",
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'deleted_at' => null,
-                ],
-                [
-                    "name" => "Lieferung verzögert",
-                    "slug" => "lieferung-verzögert",
-                    "language" => "de",
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'deleted_at' => null,
-                ],
-                [
-                    "name" => "Artikel nicht benötigt",
-                    "slug" => "artikel-nicht-benötigt",
-                    "language" => "de",
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'deleted_at' => null,
-                ],
-                [
-                    "name" => "Meinung geändert",
-                    "slug" => "meinung-geändert",
-                    "language" => "de",
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'deleted_at' => null,
-                ],
-                [
-                    "name" => "Sonstiges",
-                    "slug" => "sonstiges",
-                    "language" => "de",
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                    'deleted_at' => null,
-                ],
-            ];
         }
+
+        return [
+            [
+                "name" => "Product Not as Described",
+                "slug" => "product-not-as-described-bn",
+                "language" => "bn",
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ],
+            [
+                "name" => "Wrong Item Shipped",
+                "slug" => "wrong-item-shipped-bn",
+                "language" => "bn",
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ],
+            [
+                "name" => "Damaged Item",
+                "slug" => "damaged-item-bn",
+                "language" => "bn",
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ],
+            [
+                "name" => "Cancelled Order",
+                "slug" => "cancelled-order-bn",
+                "language" => "bn",
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ],
+            [
+                "name" => "Late Delivery",
+                "slug" => "late-delivery-bn",
+                "language" => "bn",
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ],
+            [
+                "name" => "Item Not Needed",
+                "slug" => "item-not-needed-bn",
+                "language" => "bn",
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ],
+            [
+                "name" => "Changed Mind",
+                "slug" => "changed-mind-bn",
+                "language" => "bn",
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ],
+            [
+                "name" => "Others",
+                "slug" => "others-bn",
+                "language" => "bn",
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ],
+        ];
     }
 
     // private function getEnglishDummyData(): array

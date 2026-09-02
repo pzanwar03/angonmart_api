@@ -19,14 +19,6 @@ class Participant extends Model
     }
 
     /**
-     * @return belongsTo
-     */
-    public function shop(): BelongsTo
-    {
-        return $this->belongsTo(Shop::class, 'shop_id');
-    }
-
-    /**
      * Get all of the models that own participants.
      */
     public function conversation(): BelongsTo

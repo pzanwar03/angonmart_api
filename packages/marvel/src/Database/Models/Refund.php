@@ -39,13 +39,6 @@ class Refund extends Model
     /**
      * @return BelongsTo
      */
-    public function shop(): BelongsTo
-    {
-        return $this->belongsTo(Shop::class, 'shop_id');
-    }
-    /**
-     * @return BelongsTo
-     */
     public function refund_policy(): BelongsTo
     {
         return $this->belongsTo(RefundPolicy::class, 'refund_policy_id');

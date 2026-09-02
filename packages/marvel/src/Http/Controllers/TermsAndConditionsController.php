@@ -47,40 +47,13 @@ class TermsAndConditionsController extends CoreController
             $user = $request->user();
             $language = $request->language ?? DEFAULT_LANGUAGE;
 
-            // if statement is for role base authorized scenerio
-            // else statment is for global viewers level guest scenerio
-
-            if (isset($user)) {
-                switch ($user) {
-                    case $user->hasPermissionTo(Permission::SUPER_ADMIN):
-                        return $this->repository->with('shop')->where('language', $language);
-                        break;
-
-                    case $user->hasPermissionTo(Permission::STORE_OWNER):
-                        if ($this->repository->hasPermission($user, $request->shop_id)) {
-                            return $this->repository->with('shop')->where('shop_id', '=', $request->shop_id)->where('language', $language);
-                        } else {
-                            return $this->repository->with('shop')->where('user_id', '=', $user->id)->where('language', $language)->whereIn('shop_id', $user->shops->pluck('id'));
-                        }
-                        break;
-
-                    case $user->hasPermissionTo(Permission::STAFF):
-                        if ($this->repository->hasPermission($user, $request->shop_id)) {
-                            return $this->repository->with('shop')->where('shop_id', '=', $request->shop_id)->where('language', $language);
-                        }
-                        break;
-
-                    default:
-                        return $this->repository->with('shop')->where('language', $language)->where('is_approved', '=', true);
-                        break;
-                }
-            } else {
-                if ($request->shop_id) {
-                    return $this->repository->with('shop')->where('shop_id', '=', $request->shop_id)->where('is_approved', '=', true)->where('language', $language);
-                } else {
-                    return $this->repository->with('shop')->where('is_approved', '=', true)->where('language', $language);
-                }
+            // authorized users (super_admin/staff) can see all terms, including unapproved ones
+            // guests / customers only see approved ones
+            if ($user && ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF))) {
+                return $this->repository->where('language', $language);
             }
+
+            return $this->repository->where('is_approved', '=', true)->where('language', $language);
         } catch (MarvelException $e) {
             throw new MarvelException(SOMETHING_WENT_WRONG, $e->getMessage());
         }
@@ -113,7 +86,7 @@ class TermsAndConditionsController extends CoreController
     {
         try {
             $language = $request->language ?? DEFAULT_LANGUAGE;
-            $termsAndCondition = $this->repository->with('shop')->where('language', $language)->where('slug', '=', $slug)->first();
+            $termsAndCondition = $this->repository->where('language', $language)->where('slug', '=', $slug)->first();
             return new TermsConditionResource($termsAndCondition);
         } catch (MarvelException $e) {
             throw new MarvelException(NOT_FOUND, $e->getMessage());
@@ -166,64 +139,11 @@ class TermsAndConditionsController extends CoreController
     {
         try {
             $user = $request->user();
-            if ($user && ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STORE_OWNER) || $user->hasPermissionTo(Permission::STAFF))) {
+            if ($user && ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF))) {
                 return $this->repository->findOrFail($request->id)->delete();
             }
         } catch (MarvelException $e) {
             throw new MarvelException(NOT_FOUND, $e->getMessage());
-        }
-    }
-
-    /**
-     * approveTerm
-     *
-     * @param  Request $request
-     * @return void
-     */
-    public function approveTerm(Request $request)
-    {
-        try {
-            if (!$request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
-                throw new MarvelException(NOT_AUTHORIZED);
-            }
-            $id = $request->id;
-            try {
-                $term = $this->repository->findOrFail($id);
-            } catch (\Exception $e) {
-                throw new ModelNotFoundException(NOT_FOUND);
-            }
-            $term->is_approved = true;
-            $term->save();
-            return $term;
-        } catch (MarvelException $th) {
-            throw new MarvelException(SOMETHING_WENT_WRONG);
-        }
-    }
-
-    /**
-     * disApproveTerm
-     *
-     * @param  Request $request
-     * @return void
-     */
-    public function disApproveTerm(Request $request)
-    {
-        try {
-            if (!$request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
-                throw new MarvelException(NOT_AUTHORIZED);
-            }
-            $id = $request->id;
-            try {
-                $term = $this->repository->findOrFail($id);
-            } catch (\Exception $e) {
-                throw new ModelNotFoundException(NOT_FOUND);
-            }
-
-            $term->is_approved = false;
-            $term->save();
-            return $term;
-        } catch (MarvelException $th) {
-            throw new MarvelException(SOMETHING_WENT_WRONG);
         }
     }
 }

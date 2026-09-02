@@ -21,12 +21,4 @@ class TermsConditionsMutator
     {
         return Shop::call('Marvel\Http\Controllers\TermsAndConditionsController@deleteTermsConditions', $args);
     }
-    public function approveTerm($rootValue, array $args, GraphQLContext $context)
-    {
-        return Shop::call('Marvel\Http\Controllers\TermsAndConditionsController@approveTerm', $args);
-    }
-    public function disApproveTerm($rootValue, array $args, GraphQLContext $context)
-    {
-        return Shop::call('Marvel\Http\Controllers\TermsAndConditionsController@disApproveTerm', $args);
-    }
 }

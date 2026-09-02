@@ -23,7 +23,7 @@ type Manufacturer {
     is_approved: Boolean
     description: String
     website: String
-    socials: [ShopSocials]
+    socials: [Social]
     image: Attachment
     cover_image: Attachment
     created_at: DateTime
@@ -41,8 +41,7 @@ input CreateManufacturerInput {
     is_approved: Boolean
     website: String
     language: String
-    socials: [ShopSocialInput]
-    shop_id: ID @rules(apply: ["exists:shops,id"])
+    socials: [SocialInput]
     image: AttachmentInput
     cover_image: AttachmentInput
     slug: String
@@ -53,11 +52,10 @@ input UpdateManufacturerInput {
     name: String!
     slug: String!
     type_id: ID! @rules(apply: ["exists:types,id"])
-    shop_id: ID @rules(apply: ["exists:shops,id"])
     is_approved: Boolean
     website: String
     language: String
-    socials: [ShopSocialInput]
+    socials: [SocialInput]
     description: String
         @rules(
             apply: ["max:10000"]

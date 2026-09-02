@@ -49,7 +49,7 @@ class NewOrderProcessed extends Notification implements ShouldQueue
                 'emails.order.order-processed',
                 [
                     'order' => $this->order,
-                    'url' => config('shop.dashboard_url') . $this->order->shop->slug . '/orders/' . $this->order->id
+                    'url' => config('shop.dashboard_url') . 'orders/' . $this->order->id
                 ]
             );
     }

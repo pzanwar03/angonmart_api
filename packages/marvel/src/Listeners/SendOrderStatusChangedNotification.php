@@ -29,14 +29,7 @@ class SendOrderStatusChangedNotification implements ShouldQueue
 
         $this->sendOrderStatusChangeSms($order);
         $emailReceiver = $this->getWhichUserWillGetEmail(EventType::ORDER_STATUS_CHANGED, $order->language ?? DEFAULT_LANGUAGE);
-        if ($emailReceiver['vendor'] && $order->parent_id != null) {
-            $vendor_id = $order->shop->owner_id;
-            $vendor = User::find($vendor_id);
-
-            if ($vendor)
-                $vendor->notify(new OrderStatusChangedNotification($event->order));
-        }
-        if ($emailReceiver['customer'] && $order->parent_id == null) {
+        if ($emailReceiver['customer'] && $customer) {
             $customer->notify(new OrderStatusChangedNotification($event->order));
         }
         if ($emailReceiver['admin']) {

@@ -7,8 +7,6 @@ use App\Notifications\NewReviewCreated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Marvel\Database\Models\NotifyLogs;
-use Marvel\Database\Models\Order;
-use Marvel\Database\Models\Shop;
 use Marvel\Enums\EventType;
 use Illuminate\Support\Facades\Cache;
 use Marvel\Database\Models\User;
@@ -29,14 +27,14 @@ class StoredStoreNoticeNotifyLogsListener implements ShouldQueue
      */
     public function handle(StoreNoticeEvent $event)
     {
-        // save notification for vendor
+        // save notification for the users this store notice was sent to
         if (isset($event->storeNotice->users)) {
             foreach ($event->storeNotice->users as $key => $user) {
                 NotifyLogs::create([
                     'receiver' => $user->id,
                     'sender' =>  $event->user->id,
                     'notify_type' => 'store_notice',
-                    'notify_receiver_type' => 'vendor',
+                    'notify_receiver_type' => 'staff',
                     'is_read' => false,
                     'notify_text' =>  mb_substr($event->storeNotice->notice, 0, 15) . '...',
                     'notify_tracker' => $event->storeNotice->id

@@ -7,8 +7,6 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -31,7 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'is_active', 'shop_id'
+        'name', 'email', 'password', 'is_active'
     ];
 
     /**
@@ -107,25 +105,9 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * @return HasMany
      */
-    public function shops(): HasMany
-    {
-        return $this->hasMany(Shop::class, 'owner_id');
-    }
-
-    /**
-     * @return HasMany
-     */
     public function refunds(): HasMany
     {
-        return $this->hasMany(Shop::class, 'customer_id');
-    }
-
-    /**
-     * @return BelongsTo
-     */
-    public function managed_shop(): BelongsTo
-    {
-        return $this->belongsTo(Shop::class, 'shop_id');
+        return $this->hasMany(Refund::class, 'customer_id');
     }
 
     /**
@@ -161,19 +143,6 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Follow shop
-     *
-     * @return BelongsToMany
-     */
-    public function follow_shops(): BelongsToMany
-    {
-        return $this->belongsToMany(Shop::class, 'user_shop');
-    }
-
-
-    /**
-     * Follow shop
-     *
      * @return HasMany
      */
     public function payment_gateways(): HasMany
@@ -213,7 +182,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function loadLastOrder()
     {
-        $data = $this->orders()->whereNull('parent_id')
+        $data = $this->orders()
             ->where('order_status', OrderStatus::COMPLETED)
             ->latest()->first();
         $this->setRelation('last_order', $data);

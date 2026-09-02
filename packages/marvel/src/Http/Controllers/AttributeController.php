@@ -5,6 +5,7 @@ namespace Marvel\Http\Controllers;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -36,7 +37,7 @@ class AttributeController extends CoreController
     {
         $limit = $request->limit ?   $request->limit : 15;
         $language = $request->language ?? DEFAULT_LANGUAGE;
-        $attributes = $this->repository->where('language', $language)->with(['values', 'shop']);
+        $attributes = $this->repository->where('language', $language)->with(['values']);
         if ($request->request_for === "pagination_list") {
             $attributes = $attributes->paginate($limit)->withQueryString();
             $data = AttributeResource::collection($attributes)->response()->getData(true);
@@ -56,7 +57,7 @@ class AttributeController extends CoreController
     public function store(AttributeRequest $request)
     {
         try {
-            if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+            if ($this->repository->hasPermission($request->user())) {
                 return $this->repository->storeAttribute($request);
             }
             throw new AuthorizationException(NOT_AUTHORIZED);
@@ -108,7 +109,7 @@ class AttributeController extends CoreController
     public function updateAttribute(AttributeRequest $request)
     {
 
-        if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+        if ($this->repository->hasPermission($request->user())) {
             try {
                 $attribute = $this->repository->with('values')->findOrFail($request->id);
             } catch (\Exception $e) {
@@ -142,16 +143,16 @@ class AttributeController extends CoreController
         } catch (\Exception $e) {
             throw new HttpException(404, NOT_FOUND);
         }
-        if ($this->repository->hasPermission($request->user(), $attribute->shop->id)) {
+        if ($this->repository->hasPermission($request->user())) {
             $attribute->delete();
             return $attribute;
         }
         throw new AuthorizationException(NOT_AUTHORIZED);
     }
 
-    public function exportAttributes(Request $request, $shop_id)
+    public function exportAttributes(Request $request)
     {
-        $filename = 'attributes-for-shop-id-' . $shop_id . '.csv';
+        $filename = 'attributes-' . Str::random(5) . '.csv';
         $headers = [
             'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
             'Content-type'        => 'text/csv',
@@ -160,7 +161,7 @@ class AttributeController extends CoreController
             'Pragma'              => 'public'
         ];
 
-        $list = $this->repository->where('shop_id', $shop_id)->with(['values'])->get()->toArray();
+        $list = $this->repository->with(['values'])->get()->toArray();
 
         if (!count($list)) {
             return response()->stream(function () {
@@ -197,7 +198,6 @@ class AttributeController extends CoreController
     {
         $requestFile = $request->file();
         $user = $request->user();
-        $shop_id = $request->shop_id;
 
         if (count($requestFile)) {
             if (isset($requestFile['csv'])) {
@@ -207,11 +207,11 @@ class AttributeController extends CoreController
             }
         }
 
-        if (!$this->repository->hasPermission($user, $shop_id)) {
+        if (!$this->repository->hasPermission($user)) {
             throw new MarvelException(NOT_AUTHORIZED);
         }
-        if (isset($shop_id)) {
-            $file = $uploadedCsv->storePubliclyAs('csv-files', 'attributes-' . $shop_id . '.' . $uploadedCsv->getClientOriginalExtension(), 'public');
+        if (isset($uploadedCsv)) {
+            $file = $uploadedCsv->storePubliclyAs('csv-files', 'attributes-' . Str::random(5) . '.' . $uploadedCsv->getClientOriginalExtension(), 'public');
 
             $attributes = $this->repository->csvToArray(storage_path() . '/app/public/' . $file);
 
@@ -220,7 +220,6 @@ class AttributeController extends CoreController
                     throw new MarvelException("MARVEL_ERROR.WRONG_CSV");
                 }
                 unset($attribute['id']);
-                $attribute['shop_id'] = $shop_id;
                 $values = [];
                 if (isset($attribute['values'])) {
                     $values = explode(',', $attribute['values']);

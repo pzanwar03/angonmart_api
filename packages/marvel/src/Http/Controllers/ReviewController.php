@@ -72,15 +72,17 @@ class ReviewController extends CoreController
 
             $user_id = $request->user()->id;
             $request['user_id'] = $user_id;
+            // the order lookup above already confirms this reviewer purchased the product
+            $request['is_verified'] = true;
 
             // check if the review is following conventional system.
             if (!empty($setting->options['reviewSystem']['value']) && $setting->options['reviewSystem']['value'] === 'review_single_time') {
 
                 // find out if any review exists or not
                 if (isset($request['variation_option_id']) && !empty($request['variation_option_id'])) {
-                    $review = $this->repository->where('user_id', $user_id)->where('order_id', $order_id)->where('product_id', $product_id)->where('shop_id', $request['shop_id'])->where('variation_option_id', $request['variation_option_id'])->get();
+                    $review = $this->repository->where('user_id', $user_id)->where('order_id', $order_id)->where('product_id', $product_id)->where('variation_option_id', $request['variation_option_id'])->get();
                 } else {
-                    $review = $this->repository->where('user_id', $user_id)->where('order_id', $order_id)->where('product_id', $product_id)->where('shop_id', $request['shop_id'])->get();
+                    $review = $this->repository->where('user_id', $user_id)->where('order_id', $order_id)->where('product_id', $product_id)->get();
                 }
 
                 if (count($review)) {

@@ -29,7 +29,6 @@ class CouponResource extends Resource
             'target'               => $this->target,
             'is_approve'           => $this->is_approve,
             'translated_languages' => $this->translated_languages,
-            'shop_id'              => $this->shop_id,
             'user_id'              => $this->user_id,
         ];
     }

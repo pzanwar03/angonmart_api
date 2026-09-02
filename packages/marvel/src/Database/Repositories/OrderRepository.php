@@ -12,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Marvel\Database\Models\Balance;
 use Marvel\Database\Models\Coupon;
 use Marvel\Database\Models\Order;
 use Marvel\Database\Models\OrderedFile;
@@ -22,6 +21,7 @@ use Marvel\Database\Models\Product;
 use Marvel\Database\Models\Settings;
 use Marvel\Database\Models\User;
 use Marvel\Database\Models\Variation;
+use Marvel\Database\Repositories\DeliveryZoneRepository;
 use Marvel\Enums\CouponType;
 use Marvel\Enums\OrderStatus;
 use Marvel\Enums\Permission;
@@ -30,7 +30,6 @@ use Marvel\Enums\PaymentGatewayType;
 use Marvel\Enums\PaymentStatus;
 use Marvel\Events\OrderCreated;
 use Marvel\Events\OrderProcessed;
-use Marvel\Events\OrderReceived;
 use Marvel\Exceptions\MarvelBadRequestException;
 use Marvel\Traits\CalculatePaymentTrait;
 use Marvel\Traits\OrderManagementTrait;
@@ -52,7 +51,6 @@ class OrderRepository extends BaseRepository
      */
     protected $fieldSearchable = [
         'tracking_number' => 'like',
-        'shop_id',
         'language',
     ];
     /**
@@ -61,7 +59,6 @@ class OrderRepository extends BaseRepository
     protected array $dataArray = [
         'tracking_number',
         'customer_id',
-        'shop_id',
         'language',
         'order_status',
         'payment_status',
@@ -176,7 +173,13 @@ class OrderRepository extends BaseRepository
         if (isset($coupon) && $coupon->type === CouponType::FREE_SHIPPING_COUPON) {
             $request['delivery_fee'] = 0;
         } else {
-            $request['delivery_fee'] = $request['delivery_fee'];
+            $settings = Settings::getData($request->language ?? DEFAULT_LANGUAGE);
+            $freeShipping = !empty($settings['options']['freeShipping'])
+                && !empty($settings['options']['freeShippingAmount'])
+                && $settings['options']['freeShippingAmount'] <= $request['amount'];
+            $request['delivery_fee'] = $freeShipping
+                ? 0
+                : app(DeliveryZoneRepository::class)->resolveCharge($request['shipping_address'] ?? []);
         }
 
         $request['paid_total'] = $request['amount'] + $request['sales_tax'] + $request['delivery_fee'] -  $request['discount'];
@@ -242,15 +245,10 @@ class OrderRepository extends BaseRepository
     {
         $order = Order::findOrFail($request->id);
         $user = $request->user();
-        if (isset($order->shop_id)) {
-            if ($this->hasPermission($user, $order->shop_id)) {
-                return $this->changeOrderStatus($order, $request->order_status);
-            }
-        } else if ($user->hasPermissionTo(Permission::SUPER_ADMIN)) {
+        if ($this->hasPermission($user)) {
             return $this->changeOrderStatus($order, $request->order_status);
-        } else {
-            throw new AuthorizationException(NOT_AUTHORIZED);
         }
+        throw new AuthorizationException(NOT_AUTHORIZED);
     }
 
     /**
@@ -305,8 +303,6 @@ class OrderRepository extends BaseRepository
             $order = $this->create($orderInput);
             $products = $this->processProducts($request['products'], $request['customer_id'], $order);
             $order->products()->attach($products);
-            $this->createChildOrder($order->id, $request);
-            //  $this->calculateShopIncome($order);
             $invoiceData = $this->createInvoiceDataForEmail($request, $order);
             $customer = $request->user() ?? null;
             event(new OrderCreated($order, $invoiceData, $customer));
@@ -346,24 +342,6 @@ class OrderRepository extends BaseRepository
     }
 
     /**
-     * calculateShopIncome
-     *
-     * @param  mixed $parent_order
-     * @return void
-     */
-    protected function calculateShopIncome($parent_order)
-    {
-        foreach ($parent_order->children as  $order) {
-            $balance = Balance::where('shop_id', '=', $order->shop_id)->first();
-            $adminCommissionRate = $balance->admin_commission_rate;
-            $shop_earnings = ($order->total * (100 - $adminCommissionRate)) / 100;
-            $balance->total_earnings = $balance->total_earnings + $shop_earnings;
-            $balance->current_balance = $balance->current_balance + $shop_earnings;
-            $balance->save();
-        }
-    }
-
-    /**
      * processProducts
      *
      * @param  mixed $products
@@ -379,22 +357,20 @@ class OrderRepository extends BaseRepository
                 $products[$key] = $product;
             }
             try {
-                if ($order->parent_id === null) {
-                    $productData = Product::with('digital_file')->findOrFail($product['product_id']);
+                $productData = Product::with('digital_file')->findOrFail($product['product_id']);
 
-                    // if rental product
-                    $isRentalProduct = $productData->is_rental;
-                    if ($isRentalProduct) {
-                        $this->processRentalProduct($product, $order->id);
-                    }
+                // if rental product
+                $isRentalProduct = $productData->is_rental;
+                if ($isRentalProduct) {
+                    $this->processRentalProduct($product, $order->id);
+                }
 
 
-                    if ($productData->product_type === ProductType::SIMPLE) {
-                        $this->storeOrderedFile($productData, $product['order_quantity'], $customer_id, $order->tracking_number);
-                    } else if ($productData->product_type === ProductType::VARIABLE) {
-                        $variation_option = Variation::with('digital_file')->findOrFail($product['variation_option_id']);
-                        $this->storeOrderedFile($variation_option, $product['order_quantity'], $customer_id, $order->tracking_number);
-                    }
+                if ($productData->product_type === ProductType::SIMPLE) {
+                    $this->storeOrderedFile($productData, $product['order_quantity'], $customer_id, $order->tracking_number);
+                } else if ($productData->product_type === ProductType::VARIABLE) {
+                    $variation_option = Variation::with('digital_file')->findOrFail($product['variation_option_id']);
+                    $this->storeOrderedFile($variation_option, $product['order_quantity'], $customer_id, $order->tracking_number);
                 }
             } catch (Exception $e) {
                 throw $e;
@@ -500,55 +476,6 @@ class OrderRepository extends BaseRepository
         }
     }
 
-
-    /**
-     * createChildOrder
-     *
-     * @param  mixed $id
-     * @param  mixed $request
-     * @return void
-     * @throws Exception
-     */
-    public function createChildOrder($id, $request): void
-    {
-        $products = $request->products;
-        $productsByShop = [];
-        $language = $request->language ?? DEFAULT_LANGUAGE;
-
-        foreach ($products as $key => $cartProduct) {
-            $product = Product::findOrFail($cartProduct['product_id']);
-            $productsByShop[$product->shop_id][] = $cartProduct;
-        }
-
-        foreach ($productsByShop as $shop_id => $cartProduct) {
-            $amount = array_sum(array_column($cartProduct, 'subtotal'));
-            $orderInput = [
-                'tracking_number'  => $this->generateTrackingNumber(),
-                'shop_id'          => $shop_id,
-                'order_status'     => $request->order_status,
-                'payment_status'   => $request->payment_status,
-                'customer_id'      => $request->customer_id,
-                'shipping_address' => $request->shipping_address,
-                'billing_address'  => $request->billing_address,
-                'customer_contact' => $request->customer_contact,
-                'customer_name'    => $request->customer_name,
-                'delivery_time'    => $request->delivery_time,
-                'delivery_fee'     => 0,
-                'sales_tax'        => 0,
-                'discount'         => 0,
-                'parent_id'        => $id,
-                'amount'           => $amount,
-                'total'            => $amount,
-                'paid_total'       => $amount,
-                'language'         => $language,
-                "payment_gateway"  => $request->payment_gateway,
-            ];
-
-            $order = $this->create($orderInput);
-            $order->products()->attach($this->processProducts($cartProduct,  $request['customer_id'],  $order));
-            event(new OrderReceived($order));
-        }
-    }
 
     /**
      * Helper method to generate unique tracking number

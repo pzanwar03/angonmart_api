@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Marvel\Database\Models\Conversation;
 use Marvel\Database\Models\Message;
 use Marvel\Database\Models\Participant;
+use Marvel\Enums\Permission;
 use Marvel\Events\MessageSent;
 use Marvel\Exceptions\MarvelException;
 use Prettus\Repository\Criteria\RequestCriteria;
@@ -47,18 +48,17 @@ class MessageRepository extends BaseRepository
         $conversation_id = $request->conversation_id;
         try {
             $conversation = Conversation::findOrFail($conversation_id);
+            $user = $request->user();
+            $isStaff = $user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF);
             $authorize = [
                 'user' => false,
                 'shop' => false
             ];
-            if ($request->user()->id == $conversation->user_id) {
+            if ($user->id == $conversation->user_id) {
                 $authorize['user'] = true;
                 $type =  "shop";
             }
-            if (
-                in_array($conversation->shop_id, $request->user()->shops()->pluck('id')->toArray()) ||
-                $conversation->shop_id === $request->user()->shop_id
-            ) {
+            if ($isStaff) {
                 $authorize['shop'] = true;
                 $type =  "user";
             }

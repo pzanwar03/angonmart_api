@@ -31,7 +31,12 @@ class TypeController extends CoreController
     public function index(Request $request)
     {
         $language = $request->language ?? DEFAULT_LANGUAGE;
-        $types = $this->repository->where('language', $language)->get();
+        $types = Type::query()->where('language', $language)->get();
+
+        if ($types->isEmpty() && $language !== DEFAULT_LANGUAGE) {
+            $types = Type::query()->where('language', DEFAULT_LANGUAGE)->get();
+        }
+
         return TypeResource::collection($types);
     }
 
@@ -67,7 +72,25 @@ class TypeController extends CoreController
                 $type = $this->repository->where('id', $params)->with('banners')->firstOrFail();
                 return new TypeResource($type);
             }
-            $type = $this->repository->where('slug', $params)->where('language', $language)->with('banners')->firstOrFail();
+
+            $typeQuery = Type::query()
+                ->with('banners')
+                ->where('slug', $params);
+
+            $type = (clone $typeQuery)
+                ->where('language', $language)
+                ->first();
+
+            if (!$type && $language !== DEFAULT_LANGUAGE) {
+                $type = (clone $typeQuery)
+                    ->where('language', DEFAULT_LANGUAGE)
+                    ->first();
+            }
+
+            if (!$type) {
+                $type = $typeQuery->firstOrFail();
+            }
+
             return new TypeResource($type);
         } catch (MarvelException $e) {
             throw new MarvelException(NOT_FOUND);

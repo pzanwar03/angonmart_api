@@ -6,7 +6,6 @@ namespace Marvel\Database\Repositories;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Marvel\Database\Models\Shop;
 use Marvel\Database\Models\StoreNotice;
 use Marvel\Database\Models\User;
 use Marvel\Enums\Permission;
@@ -32,7 +31,6 @@ class StoreNoticeRepository extends BaseRepository
         'expired_at',
         'type',
         'receiver.id',
-        'shops.slug',
         'users.id',
         'creator_role' => 'like',
     ];
@@ -74,51 +72,20 @@ class StoreNoticeRepository extends BaseRepository
      */
     public function fetchStoreNotices(Request $request): mixed
     {
-
         try {
-
             $storeNotices = $this->where('id', '!=', null);
 
-            /* for Guest user Requesting from shop */
-
+            /* Guests only see general site notices */
             if (!$request->user()) {
-                $shop_id = $request['shop_id'] ?? 0;
-                if (isset($shop_id)) {
-                    $shop = Shop::where('id', $shop_id)->orWhere('slug', $shop_id)->first();
-                    return $storeNotices
-                        ->where([
-                            'created_by' => $shop->owner_id ?? 0,
-                        ])->whereRelation('shops', 'id', $shop_id)
-                        ->whereDate('expired_at', '>=', now());
-                }
+                return $storeNotices->whereDate('expired_at', '>=', now());
             }
 
             if (!$request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
-                /* Block for authenticated user [vendor or staff] */
-                if (isset($request['shop_id'])) {
-                    /* code for customers */
-                    $shop_id = $request['shop_id'];
-                    $shop = Shop::findOrFail($shop_id);
-                    $storeNotices
-                        ->where([
-                            'created_by' => $shop->owner_id ?? 0,
-                        ])->whereRelation('shops', 'id', $shop_id);
-                } elseif ($request->user()->managed_shop) {
-                    /* Block for staff notices */
-                    $shop_id = $request->user()->managed_shop->id ?? 0;
-                    $storeNotices
-                        ->where([
-                            'created_by' => $request->user()->managed_shop->owner_id ?? 0,
-                        ])->whereRelation('shops', 'id', $shop_id);
-                } else {
-                    /* Block for Store owner notices */
-                    $storeNotices->where('created_by', $request->user()->id)
-                        ->orWhereRelation('users', 'id', $request->user()->id);
-                }
+                /* Non super-admin users only see notices addressed to them or created by them */
+                $storeNotices->where('created_by', $request->user()->id)
+                    ->orWhereRelation('users', 'id', $request->user()->id);
             }
-            if (isset($request['shop_id'])) {
-                $storeNotices->whereRelation('shops', 'id', $request['shop_id']);
-            }
+
             return $storeNotices->whereDate('expired_at', '>=', now());
         } catch (Exception $e) {
             throw new Exception(SOMETHING_WENT_WRONG);
@@ -155,10 +122,9 @@ class StoreNoticeRepository extends BaseRepository
     {
         try {
             if ($request->user()->hasPermissionTo(Permission::SUPER_ADMIN)) {
-                return User::permission(Permission::STORE_OWNER)->orderBy('name')->get();
-            } else {
-                return $request->user()->shops->where('is_active', 1);
+                return User::permission(Permission::STAFF)->orderBy('name')->get();
             }
+            return collect();
         } catch (Exception $e) {
             throw new Exception(SOMETHING_WENT_WRONG);
         }

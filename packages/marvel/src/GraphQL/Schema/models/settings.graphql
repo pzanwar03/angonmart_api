@@ -22,16 +22,16 @@ type SettingCurrencyOptions {
 }
 
 type ContactDetails {
-    socials: [ShopSocials]
+    socials: [Social]
     contact: String
-    location: Location
+    location: GoogleMapLocation
     website: String
     emailAddress: String
 }
 input ContactDetailsInput {
-    socials: [ShopSocialInput]
+    socials: [SocialInput]
     contact: String
-    location: LocationInput
+    location: GoogleMapLocationInput
     website: String
     emailAddress: String
 }
@@ -111,7 +111,6 @@ type SettingsOptions {
     isProductReview: Boolean
     contactDetails: ContactDetails
     minimumOrderAmount: Float
-    maxShopDistance: Float
     currencyToWalletRatio: Int
     signupPoints: Int
     maximumQuestionLimit: Int
@@ -130,7 +129,6 @@ type SettingsOptions {
     smsEvent: EventSettings
     emailEvent: EventSettings
     server_info: ServerInfo
-    useAi: Boolean
     enableTerms: Boolean
     defaultAi: String
     StripeCardOnly: Boolean
@@ -145,14 +143,12 @@ type SettingsOptions {
     isPromoPopUp: Boolean
     promoPopup: PromoPopup
     enableEmailForDigitalProduct: Boolean
-    isMultiCommissionRate: Boolean
     enableReviewPopup: Boolean
     reviewSystem: ReviewSystem
 }
 
 type EventSettings {
     customer: Customer
-    vendor: Vendor
     admin: Admin
 }
 
@@ -161,14 +157,6 @@ type Customer {
     refundOrder: Boolean
     paymentOrder: Boolean
     answerQuestion: Boolean
-}
-
-type Vendor {
-    statusChangeOrder: Boolean
-    refundOrder: Boolean
-    paymentOrder: Boolean
-    createReview: Boolean
-    createQuestion: Boolean
 }
 
 type Admin {
@@ -231,14 +219,6 @@ input CustomerInput {
     answerQuestion: Boolean
 }
 
-input VendorInput {
-    statusChangeOrder: Boolean
-    refundOrder: Boolean
-    paymentOrder: Boolean
-    createReview: Boolean
-    createQuestion: Boolean
-}
-
 input AdminInput {
     statusChangeOrder: Boolean
     refundOrder: Boolean
@@ -247,7 +227,6 @@ input AdminInput {
 
 input EventSettingsInput {
     customer: CustomerInput
-    vendor: VendorInput
     admin: AdminInput
 }
 
@@ -317,7 +296,6 @@ input SettingsOptionsInput {
     isProductReview: Boolean
     contactDetails: ContactDetailsInput
     minimumOrderAmount: Float
-    maxShopDistance: Float
     currencyToWalletRatio: Int
     signupPoints: Int
     maximumQuestionLimit: Int
@@ -353,7 +331,6 @@ input SettingsOptionsInput {
     enableEmailForDigitalProduct: Boolean
     enableReviewPopup: Boolean
     reviewSystem: ReviewSystemInput
-    isMultiCommissionRate: Boolean
 }
 
 input SettingsInput {

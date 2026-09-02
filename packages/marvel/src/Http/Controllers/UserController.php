@@ -22,10 +22,8 @@ use Laravel\Socialite\Facades\Socialite;
 use Marvel\Console\MarvelVerification;
 use Marvel\Database\Models\DownloadToken;
 use Marvel\Database\Models\OrderedFile;
-use Marvel\Database\Models\Product;
 use Marvel\Database\Models\Profile;
 use Marvel\Database\Models\Settings;
-use Marvel\Database\Models\Shop;
 use Marvel\Database\Models\User;
 use Marvel\Database\Models\Wallet;
 use Marvel\Database\Repositories\UserRepository;
@@ -73,14 +71,14 @@ class UserController extends CoreController
             abort(403);
         }
         if ($user->hasVerifiedEmail()) {
-            if ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STORE_OWNER)) {
+            if ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF)) {
                 return Redirect::away(config('shop.dashboard_url'));
             } else {
                 return Redirect::away(config('shop.shop_url'));
             }
         }
         $user->markEmailAsVerified();
-        if ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STORE_OWNER)) {
+        if ($user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF)) {
             return Redirect::away(config('shop.dashboard_url'));
         } else {
             return Redirect::away(config('shop.shop_url'));
@@ -119,35 +117,6 @@ class UserController extends CoreController
     }
 
     /**
-     * vendors
-     *
-     * @param  Request $request
-     * @return void
-     */
-    public function vendors(Request $request)
-    {
-        $limit = $request->limit ? $request->limit : 15;
-
-        return $this->fetchVendors($request)->paginate($limit);
-    }
-
-    public function fetchVendors(Request $request)
-    {
-        $user = $request->user();
-        $shopId = $request->shop_id ?? null;
-        $exclude = is_numeric($request?->exclude) ? $request->exclude : null;
-        $is_active = $request->is_active === 'true' ? true : false;
-        $admins = User::permission(Permission::SUPER_ADMIN)->pluck('id')->toArray();
-        if ($this->repository->hasPermission($user, $shopId)) {
-            return $this->repository->permission(Permission::STORE_OWNER)
-                ->where('is_active', $is_active)
-                ->whereNotIn('id', $admins)
-                ->when($exclude, fn ($query) => $query->where('id', '!=', $exclude));
-        }
-        return $this->repository->permission(null);
-    }
-
-    /**
      * customers
      *
      * @param  Request $request
@@ -156,7 +125,7 @@ class UserController extends CoreController
     public function customers(Request $request)
     {
         $limit = $request->limit ? $request->limit : 15;
-        $userWithOtherPermissions = User::permission([Permission::SUPER_ADMIN, Permission::STORE_OWNER, Permission::STAFF])->pluck('id')->toArray();
+        $userWithOtherPermissions = User::permission([Permission::SUPER_ADMIN, Permission::STAFF])->pluck('id')->toArray();
         return $this->repository->with(['profile', 'address', 'permissions'])
             ->permission(Permission::CUSTOMER)->whereNotIn('id', $userWithOtherPermissions)->paginate($limit);
     }
@@ -198,7 +167,7 @@ class UserController extends CoreController
     public function show($id)
     {
         try {
-            return $this->repository->with(['profile', 'address', 'shops', 'managed_shop'])->findOrFail($id);
+            return $this->repository->with(['profile', 'address'])->findOrFail($id);
         } catch (MarvelException $e) {
             throw new MarvelException(NOT_FOUND);
         }
@@ -243,7 +212,7 @@ class UserController extends CoreController
             $user = $request->user();
             if (isset($user)) {
                 return $this->repository
-                    ->with(['profile', 'wallet', 'address', 'shops.balance', 'managed_shop.balance'])
+                    ->with(['profile', 'wallet', 'address'])
                     ->find($user->id)
                     ->loadLastOrder();
             }
@@ -286,16 +255,11 @@ class UserController extends CoreController
 
     public function register(UserCreateRequest $request)
     {
-        $notAllowedPermissions = [Permission::SUPER_ADMIN];
-        if ((isset($request->permission->value) && in_array($request->permission->value, $notAllowedPermissions)) || (isset($request->permission) && in_array($request->permission, $notAllowedPermissions))) {
-            throw new AuthorizationException(NOT_AUTHORIZED);
-        }
+        // Single-vendor site: every self-registered account is a customer.
+        // Vendor/store-owner sign-up is not available; staff/admin accounts
+        // are created by a super_admin instead.
         $permissions = [Permission::CUSTOMER];
         $role = Role::CUSTOMER;
-        if (isset($request->permission)) {
-            $permissions[] = isset($request->permission->value) ? $request->permission->value : $request->permission;
-            $role = Role::STORE_OWNER;
-        }
         $user = $this->repository->create([
             'name'     => $request->name,
             'email'    => $request->email,
@@ -326,21 +290,11 @@ class UserController extends CoreController
                 $banUser =  User::find($request->id);
                 $banUser->is_active = false;
                 $banUser->save();
-                $this->inactiveUserShops($banUser->id);
                 return $banUser;
             }
             throw new AuthorizationException(NOT_AUTHORIZED);
         } catch (MarvelException $th) {
             throw new MarvelException(SOMETHING_WENT_WRONG);
-        }
-    }
-    function inactiveUserShops($userId)
-    {
-        $shops = Shop::where('owner_id', $userId)->get();
-        foreach ($shops as $shop) {
-            $shop->is_active = false;
-            $shop->save();
-            Product::where('shop_id', '=', $shop->id)->update(['status' => 'draft']);
         }
     }
 
@@ -464,19 +418,16 @@ class UserController extends CoreController
         }
     }
 
+    /**
+     * List all staff accounts. Single-vendor site: staff are global
+     * admin helpers, not scoped to any shop.
+     */
     public function fetchStaff(Request $request)
     {
-        try {
-            if (!isset($request->shop_id)) {
-                throw new AuthorizationException(NOT_AUTHORIZED);
-            }
-            if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
-                return $this->repository->with(['profile'])->where('shop_id', '=', $request->shop_id);
-            }
+        if (!$this->repository->hasPermission($request->user())) {
             throw new AuthorizationException(NOT_AUTHORIZED);
-        } catch (MarvelException $e) {
-            throw new MarvelException(SOMETHING_WENT_WRONG);
         }
+        return $this->repository->with(['profile'])->permission(Permission::STAFF);
     }
 
     public function staffs(Request $request)
@@ -484,6 +435,45 @@ class UserController extends CoreController
         $query = $this->fetchStaff($request);
         $limit = $request->limit ?? 15;
         return $query->paginate($limit);
+    }
+
+    /**
+     * Create a staff (secondary admin) account. super_admin only.
+     */
+    public function addStaff(UserCreateRequest $request)
+    {
+        if (!$this->repository->hasPermission($request->user())) {
+            throw new AuthorizationException(NOT_AUTHORIZED);
+        }
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+            $user->givePermissionTo([Permission::CUSTOMER, Permission::STAFF]);
+            $user->assignRole(Role::STAFF);
+            return $user;
+        } catch (Exception $e) {
+            throw new MarvelException(SOMETHING_WENT_WRONG);
+        }
+    }
+
+    /**
+     * Remove a staff account. super_admin only.
+     */
+    public function deleteStaff(Request $request, $id)
+    {
+        if (!$this->repository->hasPermission($request->user())) {
+            throw new AuthorizationException(NOT_AUTHORIZED);
+        }
+        try {
+            $staff = $this->repository->findOrFail($id);
+        } catch (Exception $e) {
+            throw new MarvelException(NOT_FOUND);
+        }
+        $staff->delete();
+        return $staff;
     }
 
     public function socialLogin(Request $request)
@@ -577,6 +567,13 @@ class UserController extends CoreController
     public function sendOtpCode(Request $request)
     {
         $phoneNumber = $request->phone_number;
+
+        // Only accept Bangladesh numbers (+880 / 01XXXXXXXXX format).
+        $normalized = preg_replace('/[^\d]/', '', ltrim($phoneNumber, '+'));
+        if (!preg_match('/^(880)?1[3-9]\d{8}$/', $normalized)) {
+            return ['message' => 'Invalid phone number. Only Bangladesh numbers are accepted.', 'success' => false];
+        }
+
         try {
             $otpGateway = $this->getOtpGateway();
             $sendOtpCode = $otpGateway->startVerification($phoneNumber);
@@ -618,43 +615,42 @@ class UserController extends CoreController
 
         try {
             if ($this->verifyOtp($request)) {
-                // check if phone number exist
                 $profile = Profile::where('contact', $phoneNumber)->first();
-                $user = '';
-                if (!$profile) {
-                    // profile not found so could be a new user
-                    $name = $request->name;
-                    $email = $request->email;
-                    if ($name && $email) {
-                        $userExist = User::where('email',  $email)->exists();
-                        $user = User::firstOrCreate([
-                            'email'     => $email
-                        ], [
-                            'name'    => $name,
-                        ]);
-                        $user->givePermissionTo(Permission::CUSTOMER);
-                        $user->assignRole(Role::CUSTOMER);
 
-                        $user->profile()->updateOrCreate(
-                            ['customer_id' => $user->id],
-                            [
-                                'contact' => $phoneNumber
-                            ]
-                        );
-                        if (empty($userExist)) {
-                            $this->giveSignupPointsToCustomer($user->id);
-                        }
-                    } else {
-                        return ['message' => REQUIRED_INFO_MISSING, 'success' => false];
+                if (!$profile) {
+                    // Phone-only registration: derive a stable placeholder email from the number.
+                    $localPhone  = preg_replace('/[^\d]/', '', ltrim($phoneNumber, '+'));
+                    $localPhone  = preg_replace('/^880/', '', $localPhone);
+                    $placeholder = $localPhone . '@phone.angonmart.local';
+
+                    $isNew = !User::where('email', $placeholder)->exists();
+
+                    $user = User::firstOrCreate(
+                        ['email' => $placeholder],
+                        ['name'  => $phoneNumber]
+                    );
+
+                    $user->givePermissionTo(Permission::CUSTOMER);
+                    $user->assignRole(Role::CUSTOMER);
+
+                    $user->profile()->updateOrCreate(
+                        ['customer_id' => $user->id],
+                        ['contact'     => $phoneNumber]
+                    );
+
+                    if ($isNew) {
+                        $this->giveSignupPointsToCustomer($user->id);
                     }
                 } else {
                     $user = User::where('id', $profile->customer_id)->first();
                 }
+
                 event(new ProcessUserData());
+
                 return [
-                    "token" => $user->createToken('auth_token')->plainTextToken,
-                    "permissions" => $user->getPermissionNames(),
-                    "role" => $user->getRoleNames()->first()
+                    'token'       => $user->createToken('auth_token')->plainTextToken,
+                    'permissions' => $user->getPermissionNames(),
+                    'role'        => $user->getRoleNames()->first(),
                 ];
             }
             return ['message' => OTP_VERIFICATION_FAILED, 'success' => false];
@@ -730,9 +726,15 @@ class UserController extends CoreController
     {
         try {
             $email = $request->email;
+            $apiKey = config('newsletter.driver_arguments.api_key');
+            if (!is_string($apiKey) || !str_contains($apiKey, '-')) {
+                throw new MarvelException(SOMETHING_WENT_WRONG);
+            }
             Newsletter::subscribeOrUpdate($email);
             return true;
         } catch (MarvelException $th) {
+            throw new MarvelException(SOMETHING_WENT_WRONG);
+        } catch (Exception $th) {
             throw new MarvelException(SOMETHING_WENT_WRONG);
         }
     }
@@ -746,31 +748,6 @@ class UserController extends CoreController
         }
         return $this->repository->updateEmail($request);
     }
-
-    public function myStaffs(Request $request)
-    {
-        $limit = $request->limit ? $request->limit : 15;
-        return $this->fetchMyStaffs($request)->paginate($limit);
-    }
-    public function fetchMyStaffs(Request $request)
-    {
-        $user = $request->user();
-        if ($this->repository->hasPermission($user, $request->shop_id)) {
-            return $this->repository->whereRelation('managed_shop', 'owner_id', '=', $user->id);
-        }
-        return $this->repository->whereRelation('managed_shop', 'owner_id', '=', null);
-    }
-
-    public function allStaffs(Request $request)
-    {
-        $user = $request->user();
-        $limit = $request->limit ? $request->limit : 15;
-        if ($this->repository->hasPermission($user)) {
-            return $this->repository->permission(Permission::STAFF)->paginate($limit);
-        }
-        return $this->repository->permission(null)->paginate($limit);
-    }
-
 
     public function verifyLicenseKey(LicenseRequest $request, MarvelVerification $verification)
     {
@@ -792,25 +769,18 @@ class UserController extends CoreController
         $permission = strtolower($request->permission) ?? true;
         $is_active = $request->is_active ?? true;
         $query = $this->repository->where('is_active', $is_active);
-        if (!$this->repository->hasPermission($user, $request->shop_id)) {
+        if (!$this->repository->hasPermission($user)) {
             return $query->permission(null);
         }
         switch ($permission) {
             case Permission::SUPER_ADMIN:
                 $query->permission($permission);
                 break;
-            case Permission::STORE_OWNER:
-                $excludeUsers = User::permission(Permission::SUPER_ADMIN)->pluck('id')->toArray();
-                if(isset($request->exclude)){
-                    $excludeUsers = [...$excludeUsers, $request->exclude];
-                }
-                $query->permission($permission)->whereNotIn('id', $excludeUsers);
-                break;
             case Permission::STAFF:
                 $query->permission($permission);
                 break;
             case Permission::CUSTOMER:
-                $excludeUsers = User::permission([Permission::SUPER_ADMIN, Permission::STORE_OWNER, Permission::STAFF])
+                $excludeUsers = User::permission([Permission::SUPER_ADMIN, Permission::STAFF])
                     ->pluck('id')->toArray();
                 $query->permission($permission)->whereNotIn('id', $excludeUsers);
                 break;

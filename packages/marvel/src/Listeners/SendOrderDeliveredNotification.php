@@ -26,19 +26,8 @@ class SendOrderDeliveredNotification implements ShouldQueue
 
         $order = $event->order;
         $emailReceiver = $this->getWhichUserWillGetEmail(EventType::ORDER_DELIVERED, $order->language);
-        if ($emailReceiver['customer'] && $order->customer && $order->parent_id == null) {
+        if ($emailReceiver['customer'] && $order->customer) {
             $order->customer->notify(new OrderDeliveredNotification($order));
-        }
-        if ($emailReceiver['vendor']) {
-            if ($order->parent_id) {
-                try {
-                    $vendor_id = $order->shop->owner_id;
-                    $vendor = User::findOrFail($vendor_id);
-                    $vendor->notify(new OrderDeliveredNotification($order));
-                } catch (Exception $exception) {
-                    //
-                }
-            }
         }
         if ($emailReceiver['admin']) {
             $admins = $this->adminList();

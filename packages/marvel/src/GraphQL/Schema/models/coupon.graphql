@@ -5,7 +5,6 @@ extend type Query {
         sortedBy: String
         language: String
         searchJoin: String = "AND"
-        shop_id: ID
         type: String
         is_approve: Boolean
     ): [Coupon!]!
@@ -36,7 +35,6 @@ type Coupon {
     updated_at: DateTime
     target: Boolean
     is_approve: Boolean
-    shop_id: ID
     user_id: ID
 }
 
@@ -60,7 +58,6 @@ input CreateCouponInput {
     expire_at: String!
     target: Boolean
     is_approve: Boolean
-    shop_id: ID @rules(apply: ["exists:shops,id"])
     user_id: ID @rules(apply: ["exists:users,id"])
 }
 
@@ -85,7 +82,6 @@ input UpdateCouponInput {
     expire_at: String!
     target: Boolean
     is_approve: Boolean
-    shop_id: ID @rules(apply: ["exists:shops,id"])
     user_id: ID @rules(apply: ["exists:users,id"])
 }
 input VerifyCouponItemInput {
@@ -99,7 +95,6 @@ input VerifyCouponItemInput {
     language: String
     in_flash_sale: Int
     is_digital: Boolean
-    shop_id: ID
     quantity: Int
     itemTotal: Float
 }
@@ -124,10 +119,4 @@ extend type Mutation {
     verifyCoupon(input: VerifyCouponInput! @spread): VerifyCouponResponse
         @field(resolver: "CouponMutator@verify")
     restoreCoupon(id: ID!): Coupon @restore @can(ability: "super_admin")
-    approveCoupon(id: ID!): Coupon
-        @field(resolver: "CouponMutator@approveCoupon")
-        @can(ability: "super_admin")
-    disapproveCoupon(id: ID!): Coupon
-        @field(resolver: "CouponMutator@disApproveCoupon")
-        @can(ability: "super_admin")
 }

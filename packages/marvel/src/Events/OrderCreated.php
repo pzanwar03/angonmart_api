@@ -15,7 +15,6 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Marvel\Database\Models\NotifyLogs;
 use Marvel\Database\Models\Settings;
-use Marvel\Database\Models\Shop;
 use Marvel\Database\Models\StoreNotice;
 use Marvel\Database\Models\User;
 use Marvel\Exceptions\MarvelException;
@@ -59,34 +58,13 @@ class OrderCreated implements ShouldQueue, ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        $event_channels = $shop_ids = $vendor_ids = [];
+        $event_channels = [];
 
         // Notify in admin-end
         $admins = $this->getAdminUsers();
         if (isset($admins)) {
             foreach ($admins as $key => $user) {
                 $channel_name = new PrivateChannel('order.created.' . $user->id);
-                array_push($event_channels, $channel_name);
-            }
-        }
-
-
-        // Notify in vendor-end
-        if (isset($this->order->products)) {
-            foreach ($this->order->products as $key => $product) {
-                if (!in_array($product->shop_id, $shop_ids)) {
-                    $vendor_shop = Shop::findOrFail($product->shop_id);
-                    if (!in_array($vendor_shop->owner_id, $vendor_ids)) {
-                        array_push($vendor_ids, $vendor_shop->owner_id);
-                    }
-                    array_push($shop_ids, $product->shop_id);
-                }
-            }
-        }
-
-        if (isset($vendor_ids)) {
-            foreach ($vendor_ids as $key => $vendor_id) {
-                $channel_name = new PrivateChannel('order.created.' . $vendor_id);
                 array_push($event_channels, $channel_name);
             }
         }

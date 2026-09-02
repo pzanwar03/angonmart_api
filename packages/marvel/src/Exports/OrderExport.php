@@ -12,18 +12,15 @@ class OrderExport implements FromCollection, WithHeadings
 {
     use Helper;
 
-    private $shop_id;
     private $repository;
 
     /**
      * Init class
      *
      * @param object $repository
-     * @param int $shop_id
      */
-    public function __construct($repository, $shop_id)
+    public function __construct($repository)
     {
-        $this->shop_id    = $shop_id;
         $this->repository = $repository;
     }
 
@@ -34,13 +31,7 @@ class OrderExport implements FromCollection, WithHeadings
     {
         $results = [];
 
-        if (!empty($this->shop_id)) {
-            $orders = $this->repository->where('shop_id', $this->shop_id)->get();
-        } else {
-            $orders = $this->repository->where('parent_id', NULL)->get();
-            // $orders = $this->repository->where('parent_id', '<>', NULL)->get();
-        }
-
+        $orders = $this->repository->get();
 
         if (empty($orders)) {
             return collect($results);
@@ -62,7 +53,6 @@ class OrderExport implements FromCollection, WithHeadings
                 'delivery_time'      => $order?->delivery_time,
                 'status'             => $order?->order_status,
                 'tracking_number'    => $order?->tracking_number,
-                'shop'               => $order?->shop?->name,
                 'coupon_id'          => $order?->coupon_id,
                 'amount'             => formatCurrency($order?->amount, $currency, $locale),
                 'discount'           => formatCurrency($order?->discount, $currency, $locale),
@@ -97,7 +87,6 @@ class OrderExport implements FromCollection, WithHeadings
             'Delivery Time',
             'Order Status',
             'Tracking No.',
-            'Shop',
             'Coupon ID',
             'Amount',
             'Discount',

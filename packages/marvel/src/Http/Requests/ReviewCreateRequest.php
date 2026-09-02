@@ -33,7 +33,6 @@ class ReviewCreateRequest extends FormRequest
             'variation_option_id'   => ['integer', 'exists:Marvel\Database\Models\Variation,id'],
             'comment'               => ['required', 'string'],
             'rating'                => ['required', 'integer', 'min:1', 'max:5'],
-            'shop_id'               => ['required', 'exists:Marvel\Database\Models\Shop,id'],
             'photos'                => ['array'],
         ];
     }

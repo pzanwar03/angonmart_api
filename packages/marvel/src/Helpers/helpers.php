@@ -148,8 +148,6 @@ if (!function_exists('gateway_path')) {
         {
             if ($user->hasPermissionTo(Permission::SUPER_ADMIN)) {
                 return Permission::SUPER_ADMIN;
-            } else if ($user->hasPermissionTo(Permission::STORE_OWNER) && !$user->hasPermissionTo(Permission::SUPER_ADMIN)) {
-                return Permission::STORE_OWNER;
             } else if ($user->hasPermissionTo(Permission::STAFF)) {
                 return Permission::STAFF;
             } else {

@@ -13,6 +13,7 @@ use Marvel\Database\Models\OrderStatus;
 use Marvel\Database\Models\Coupon;
 use Spatie\Permission\Models\Permission;
 use Marvel\Enums\Permission as UserPermission;
+use Marvel\Database\Seeders\LanguageSeeder;
 
 
 class DatabaseSeeder extends Seeder
@@ -24,6 +25,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // run your app seeder
+        $this->call([
+            LanguageSeeder::class,
+        ]);
     }
 }

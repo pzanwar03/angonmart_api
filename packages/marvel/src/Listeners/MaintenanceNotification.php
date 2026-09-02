@@ -43,7 +43,7 @@ class MaintenanceNotification
         if (!$shouldSendEmail) return;
 
         $admins = User::permission(Permission::SUPER_ADMIN)->pluck('id')->toArray();
-        $users = User::permission(Permission::STORE_OWNER)->whereNotIN('id', $admins)->get();
+        $users = User::permission(Permission::STAFF)->whereNotIN('id', $admins)->get();
         if ($users) {
             foreach ($users as $user) {
                 Notification::route('mail', [

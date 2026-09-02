@@ -50,7 +50,7 @@ class StoreNoticeNotification extends Notification implements ShouldQueue
         if ($this->storeNotice->creator->hasPermissionTo(Permission::SUPER_ADMIN)) {
             $role = "Admin";
         } else {
-            $role = "Shop Owner";
+            $role = "Staff";
         }
 
         return (new MailMessage)

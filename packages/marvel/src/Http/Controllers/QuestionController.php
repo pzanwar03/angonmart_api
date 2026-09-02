@@ -65,7 +65,6 @@ class QuestionController extends CoreController
             $productQuestionCount = $this->repository->where([
                 'product_id' => $request['product_id'],
                 'user_id'    => $request->user()->id,
-                'shop_id'    => $request['shop_id']
             ])->count();
 
             $settings = Settings::getData();
@@ -105,7 +104,7 @@ class QuestionController extends CoreController
     public function updateQuestion(Request $request)
     {
         try {
-            if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+            if ($this->repository->hasPermission($request->user())) {
                 $id = $request->id;
                 return $this->repository->updateQuestion($request, $id);
             }

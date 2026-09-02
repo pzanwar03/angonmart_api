@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Mail;
 use Marvel\Database\Models\Address;
 use Marvel\Database\Models\Profile;
 use Marvel\Database\Models\Settings;
-use Marvel\Database\Models\Shop;
 use Marvel\Exceptions\MarvelException;
 
 class UserRepository extends BaseRepository
@@ -35,7 +34,6 @@ class UserRepository extends BaseRepository
     protected $dataArray = [
         'name',
         'email',
-        'shop_id'
     ];
 
     /**
@@ -71,8 +69,6 @@ class UserRepository extends BaseRepository
             }
             $user->profile = $user->profile;
             $user->address = $user->address;
-            $user->shop = $user->shop;
-            $user->managed_shop = $user->managed_shop;
             return $user;
         } catch (ValidatorException $e) {
             throw new MarvelException(SOMETHING_WENT_WRONG);
@@ -105,8 +101,6 @@ class UserRepository extends BaseRepository
             $user->update($request->only($this->dataArray));
             $user->profile = $user->profile;
             $user->address = $user->address;
-            $user->shop = $user->shop;
-            $user->managed_shop = $user->managed_shop;
             return $user;
         } catch (ValidationException $e) {
             throw new MarvelException(SOMETHING_WENT_WRONG);

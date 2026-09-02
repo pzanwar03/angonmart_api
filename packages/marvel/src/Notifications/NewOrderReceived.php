@@ -21,7 +21,7 @@ class NewOrderReceived extends Notification implements ShouldQueue
      *
      * @return void
      */
-    public function __construct(Order $order, string $receiver = 'storeOwner')
+    public function __construct(Order $order, string $receiver = 'admin')
     {
         $this->order = $order;
         $this->receiver = $receiver;
@@ -53,13 +53,8 @@ class NewOrderReceived extends Notification implements ShouldQueue
         } else {
             $customer = $customer->name;
         }
-        if ($this->receiver == 'admin') {
-            $subject = __('sms.order.orderCreated.admin.subject');
-            $url  =  config('shop.dashboard_url') . '/orders/' . $this->order->id;
-        } else {
-            $subject = __('sms.order.orderCreated.storeOwner.subject');
-            $url =  config('shop.dashboard_url') . $this->order->shop->slug . '/orders/' . $this->order->id;
-        }
+        $subject = __('sms.order.orderCreated.admin.subject');
+        $url  =  config('shop.dashboard_url') . '/orders/' . $this->order->id;
         return (new MailMessage)
             ->subject($subject)
             ->markdown('emails.order.order-received', ['order' => $this->order, 'customer' => $customer, 'receiver' => $this->receiver, 'url' => $url]);

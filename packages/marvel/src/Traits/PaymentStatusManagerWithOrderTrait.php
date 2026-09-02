@@ -461,18 +461,6 @@ trait PaymentStatusManagerWithOrderTrait
         $order->order_status = OrderStatus::PROCESSING;
         $order->payment_status = PaymentStatus::SUCCESS;
         $order->save();
-        try {
-            $children = json_decode($order->children);
-        } catch (\Throwable $th) {
-            $children = $order->children;
-        }
-        if (is_array($children) && count($children)) {
-            foreach ($order->children as $child_order) {
-                $child_order->order_status = OrderStatus::PROCESSING;
-                $child_order->payment_status = PaymentStatus::SUCCESS;
-                $child_order->save();
-            }
-        }
         $this->orderStatusManagementOnPayment($order, $order->order_status, $order->payment_status);
     }
 

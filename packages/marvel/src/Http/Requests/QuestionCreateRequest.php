@@ -29,7 +29,6 @@ class QuestionCreateRequest extends FormRequest
     {
         return [
             'product_id'  => ['required', 'exists:Marvel\Database\Models\Product,id'],
-            'shop_id'     => ['required', 'exists:Marvel\Database\Models\Shop,id'],
             'question'    => ['required', 'string'],
         ];
     }

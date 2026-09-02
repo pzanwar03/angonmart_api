@@ -57,12 +57,4 @@ class Coupon extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    /**
-     * @return BelongsTo
-     */
-    public function shop(): BelongsTo
-    {
-        return $this->belongsTo(Shop::class);
-    }
 }

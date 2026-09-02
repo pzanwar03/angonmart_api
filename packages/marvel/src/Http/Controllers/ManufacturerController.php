@@ -48,7 +48,7 @@ class ManufacturerController extends CoreController
     public function store(ManufacturerRequest $request)
     {
         try {
-            if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+            if ($this->repository->hasPermission($request->user())) {
                 return $this->repository->storeManufacturer($request);
             }
             throw new AuthorizationException(NOT_AUTHORIZED);
@@ -115,7 +115,7 @@ class ManufacturerController extends CoreController
 
     public function updateManufacturer(Request $request)
     {
-        if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+        if ($this->repository->hasPermission($request->user())) {
             try {
                 $Manufacturer = $this->repository->findOrFail($request->id);
             } catch (\Exception $e) {
@@ -144,7 +144,7 @@ class ManufacturerController extends CoreController
 
     public function deleteManufacturer(Request $request)
     {
-        if ($this->repository->hasPermission($request->user(), $request->shop_id)) {
+        if ($this->repository->hasPermission($request->user())) {
             $manufacturer = $this->repository->findOrFail($request->id);
             $manufacturer->delete();
             return $manufacturer;

@@ -20,14 +20,12 @@ class AttributeRepository extends BaseRepository
      */
     protected $fieldSearchable = [
         'name'        => 'like',
-        'shop_id',
         'language',
     ];
 
     protected $dataArray = [
         'name',
         'slug',
-        'shop_id',
         'language',
     ];
 

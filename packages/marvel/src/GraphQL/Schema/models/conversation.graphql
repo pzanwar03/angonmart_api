@@ -15,8 +15,6 @@ type Conversation {
     id: ID!
     user_id: ID!
     user: User @belongsTo
-    shop_id: ID!
-    shop: Shop @belongsTo
     unseen: Int
     latest_message: Message
     created_at: String
@@ -24,7 +22,7 @@ type Conversation {
 }
 
 input CreateConversationInput {
-    shop_id: ID! @rules(apply: ["required", "exists:shops,id"])
+    subject: String
 }
 
 extend type Mutation {

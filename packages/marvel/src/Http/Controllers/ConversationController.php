@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Marvel\Database\Models\Conversation;
-use Marvel\Database\Models\Shop;
 use Marvel\Database\Repositories\ConversationRepository;
+use Marvel\Enums\Permission;
 use Marvel\Exceptions\MarvelException;
 use Marvel\Http\Requests\ConversationCreateRequest;
 use Prettus\Validator\Exceptions\ValidatorException;
@@ -42,8 +42,9 @@ class ConversationController extends CoreController
     public function show($conversation_id)
     {
         $user = Auth::user();
-        $conversation = $this->repository->with(['shop', 'user.profile'])->findOrFail($conversation_id);
-        abort_unless($user->shop_id === $conversation->shop_id || in_array($conversation->shop_id, $user->shops->pluck('id')->toArray()) || $user->id === $conversation->user_id, 404, 'Unauthorized');
+        $conversation = $this->repository->with(['user.profile'])->findOrFail($conversation_id);
+        $isStaff = $user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF);
+        abort_unless($isStaff || $user->id === $conversation->user_id, 404, 'Unauthorized');
 
         return $conversation;
     }
@@ -58,11 +59,12 @@ class ConversationController extends CoreController
     {
         return $this->repository->where(function ($query) {
             $user = Auth::user();
-            $query->where('user_id', $user->id);
-            $query->orWhereIn('shop_id', $user->shops->pluck('id'));
-            $query->orWhere('shop_id', $user->shop_id);
+            $isStaff = $user->hasPermissionTo(Permission::SUPER_ADMIN) || $user->hasPermissionTo(Permission::STAFF);
+            if (!$isStaff) {
+                $query->where('user_id', $user->id);
+            }
             $query->orderBy('updated_at', 'desc');
-        })->with(['user.profile', 'shop']);
+        })->with(['user.profile']);
     }
 
     /**
@@ -79,16 +81,8 @@ class ConversationController extends CoreController
             throw new MarvelException(NOT_AUTHORIZED);
         }
 
-        $shop = Shop::findOrFail($request->shop_id);
-        if ($shop->owner_id === $request->user()->id) {
-            throw new MarvelException(YOU_CAN_NOT_SEND_MESSAGE_TO_YOUR_OWN_SHOP);
-        }
-        if ($request->shop_id === $request->user()->shop_id) {
-            throw new MarvelException(YOU_CAN_NOT_SEND_MESSAGE_TO_YOUR_OWN_SHOP);
-        }
         return $this->repository->firstOrCreate([
             'user_id' => $user->id,
-            'shop_id' => $request->shop_id
         ]);
     }
 }

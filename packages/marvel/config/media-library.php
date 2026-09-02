@@ -11,8 +11,11 @@ return [
     /*
      * The maximum file size of an item in bytes.
      * Adding a larger file will result in an exception.
+     * Raised to 50MB to support product video uploads. Ensure PHP
+     * upload_max_filesize / post_max_size and any reverse-proxy
+     * client_max_body_size are set to at least 50M as well.
      */
-    'max_file_size' => 1024 * 1024 * 10,
+    'max_file_size' => 1024 * 1024 * 50,
 
     /*
      * This queue will be used to generate derived and responsive images.

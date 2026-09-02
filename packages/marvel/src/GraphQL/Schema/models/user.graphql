@@ -20,7 +20,6 @@ extend type Query {
         search: String
         is_active: Boolean
         permission: String!
-        shop_id: String
         exclude: String
     ): [User]!
         @paginate(
@@ -43,15 +42,12 @@ type User {
     id: ID
     name: String
     email: String
-    shop_id: ID
     created_at: DateTime
     updated_at: DateTime
     profile: Profile @hasOne
     permissions: [UserPermission] @morphMany
     wallet: Wallet @hasOne
-    shops: [Shop] @hasMany
     refunds: [Refund] @hasMany
-    managed_shop: Shop @belongsTo
     is_active: Boolean
     address: [Address] @hasMany
     orders: [Order] @hasMany @lazyLoad(relations: ["products", "status"])
@@ -268,8 +264,6 @@ extend type Mutation {
         @field(resolver: "AuthMutator@verifyForgetPasswordToken")
     resetPassword(input: ResetPasswordInput! @spread): PasswordChangeResponse
         @field(resolver: "AuthMutator@resetPassword")
-    register(input: RegisterInput! @spread): AuthResponse
-        @field(resolver: "AuthMutator@register")
     addPoints(input: AddPointsInput! @spread): Boolean
         @field(resolver: "AuthMutator@addPoints")
     updateUser(input: UpdateUserInput! @spread): User

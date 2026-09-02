@@ -5,7 +5,6 @@ extend type Query {
         sortedBy: String
         language: String
         searchJoin: String = "AND"
-        shop_id: ID
         faq_type: String
         issued_by: String
     ): [Faqs!]!
@@ -18,13 +17,11 @@ extend type Query {
 
 type Faqs {
     id: ID
-    shop_id: ID
     faq_title: String
     slug: String
     faq_description: String
     faq_type: String
     issued_by: String
-    shop: Shop
     language: String
     translated_languages: [String]
 }
@@ -38,7 +35,6 @@ input CreateFaqInput {
         )
     slug: String
     user_id: ID
-    shop_id: ID
     faq_type: String
     issued_by: String
     language: String
@@ -54,7 +50,6 @@ input UpdateFaqInput {
         )
     slug: String
     user_id: ID
-    shop_id: ID
     faq_type: String
     issued_by: String
     language: String

@@ -26,8 +26,11 @@ class RelatedProductResource extends Resource
             'min_price'            => $this->min_price,
             'image'                => $this->image,
             'video'                => $this->video,
+            'video_file'           => $this->video_file,
             'price'                => $this->price,
-            'unit'                 => $this->unit
+            'unit'                 => $this->unit,
+            'is_preorder'          => (bool) $this->is_preorder,
+            'preorder_available_at'=> $this->preorder_available_at,
         ];
     }
 }

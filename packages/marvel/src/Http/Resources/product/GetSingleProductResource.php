@@ -32,13 +32,13 @@ class GetSingleProductResource extends Resource
             'digital_file'                 => $this->digital_file,
             'variations'                   => getVariations($this->variations),
             'variation_options'            => $this->variation_options,
-            'shop_id'                      => $this->shop_id,
-            'shop'                         => getResourceData($this->shop, []), // if you need extra data then pass key in array by second parameter
             'author'                       => getResourceData($this->author, []),  // if you need extra data then pass key in array by second parameter
-            'manufacturer'                 => getResourceData($this->manufacturer, []),  // if you need extra data then pass key in array by second parameter
+            'manufacturer'                 => getResourceData($this->manufacturer, ['image', 'description']),
             'related_products'             => RelatedProductResource::collection($this->related_products),
             'description'                  => $this->description,
             'in_stock'                     => $this->in_stock,
+            'is_preorder'                  => (bool) $this->is_preorder,
+            'preorder_available_at'        => $this->preorder_available_at,
             'is_taxable'                   => $this->is_taxable,
             'is_digital'                   => $this->is_digital,
             'is_external'                  => $this->is_external,
@@ -56,6 +56,7 @@ class GetSingleProductResource extends Resource
             'gallery'                      => $this->gallery,
             'image'                        => $this->image,
             'video'                        => $this->video,
+            'video_file'                   => $this->video_file,
             'status'                       => $this->status,
             'height'                       => $this->height,
             'length'                       => $this->length,
@@ -63,7 +64,10 @@ class GetSingleProductResource extends Resource
             'price'                        => $this->price,
             'quantity'                     => $this->quantity,
             'unit'                         => $this->unit,
-            'in_flash_sale'                => $this->in_flash_sale
+            'in_flash_sale'                => $this->in_flash_sale,
+            'is_verified'                  => (bool) $this->is_verified,
+            'highlights'                   => $this->highlights,
+            'specifications'               => $this->specifications,
         ];
     }
 }

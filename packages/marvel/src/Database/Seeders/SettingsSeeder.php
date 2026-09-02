@@ -121,7 +121,6 @@ class SettingsSeeder extends Seeder
                     "fractions" => 2
                 ],
                 "enableCoupons" => false,
-                "isMultiCommissionRate" => false,
                 "enableReviewPopup" => false,
                 "isProductReview" => false,
                 "useEnableGateway" => false,
@@ -137,7 +136,6 @@ class SettingsSeeder extends Seeder
                 "server_info" => server_environment_info(),
                 "useAi"         => false,
                 "defaultAi" => "openai",
-                "maxShopDistance" => 1000,
                 "siteLink" =>  "https://pickbazar.redq.io",
                 "copyrightText" =>  "Copyright © REDQ. All rights reserved worldwide.",
                 "externalText" =>  "REDQ",
@@ -149,6 +147,7 @@ class SettingsSeeder extends Seeder
                 ...$this->getSmsEmailEvents(),
                 ...$this->maintenanceSettings(),
                 ...$this->promoPopupSettings(),
+                ...$this->storeProfileSettings(),
             ]),
             "language" => DEFAULT_LANGUAGE ?? "en",
             "created_at" => Carbon::now(),
@@ -161,7 +160,7 @@ class SettingsSeeder extends Seeder
      * event types.
      *
      * @return array An array containing events for SMS and email notifications for different user
-     * roles (admin, vendor, and customer) related to order status changes, refunds, payments, creating
+     * roles (admin and customer) related to order status changes, refunds, payments, creating
      * questions, creating reviews, and answering questions.
      */
     private function getSmsEmailEvents(): array
@@ -173,11 +172,6 @@ class SettingsSeeder extends Seeder
                     "refundOrder" => false,
                     "paymentOrder" => false
                 ],
-                "vendor" => [
-                    "statusChangeOrder" => false,
-                    "paymentOrder" => false,
-                    "refundOrder" => false
-                ],
                 "customer" => [
                     "statusChangeOrder" => false,
                     "refundOrder" => false,
@@ -186,22 +180,15 @@ class SettingsSeeder extends Seeder
             ],
             "emailEvent" => [
                 "admin" => [
-                    "statusChangeOrder" => false,
-                    "refundOrder" => false,
-                    "paymentOrder" => false
-                ],
-                "vendor" => [
-                    "createQuestion" => false,
-                    "statusChangeOrder" => false,
-                    "refundOrder" => false,
-                    "paymentOrder" => false,
-                    "createReview" => false
+                    "statusChangeOrder" => true,
+                    "refundOrder" => true,
+                    "paymentOrder" => true
                 ],
                 "customer" => [
-                    "statusChangeOrder" => false,
-                    "refundOrder" => false,
-                    "paymentOrder" => false,
-                    "answerQuestion" => false
+                    "statusChangeOrder" => true,
+                    "refundOrder" => true,
+                    "paymentOrder" => true,
+                    "answerQuestion" => true
                 ]
             ],
             "pushNotification" => [
@@ -209,6 +196,70 @@ class SettingsSeeder extends Seeder
                     "order" => false,
                     "message" => false,
                     "storeNotice" => false
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * The single store's profile, replacing the old per-vendor `Shop` record now
+     * that this is a single-vendor system. Consumers should read this from
+     * `settings.options.storeProfile` instead of a `Shop` model.
+     *
+     * @return array
+     */
+    private function storeProfileSettings(): array
+    {
+        return [
+            "storeProfile" => [
+                "name" => "Pickbazar",
+                "slug" => "pickbazar",
+                "description" => "Your next ecommerce",
+                "logo" => [
+                    'thumbnail' => 'https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/2295/conversions/Logo-new-thumbnail.jpg',
+                    'original' => 'https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/2295/Logo-new.png',
+                    'id' => 2298,
+                    'file_name' => 'Logo-new.png'
+                ],
+                "cover_image" => [
+                    "thumbnail" => null,
+                    "original" => null,
+                    "id" => null,
+                    "file_name" => null
+                ],
+                "address" => [
+                    "lat" => 42.9585979,
+                    "lng" => -76.9087202,
+                    "zip" => null,
+                    "city" => null,
+                    "state" => "NY",
+                    "country" => "United States",
+                    "formattedAddress" => "NY State Thruway, New York, USA"
+                ],
+                "contact" => [
+                    "phone" => "+129290122122",
+                    "email" => "demo@demo.com",
+                ],
+                "socials" => [
+                    [
+                        "url" => "https://www.facebook.com/redqinc",
+                        "icon" => "FacebookIcon"
+                    ],
+                    [
+                        "url" => "https://twitter.com/RedqTeam",
+                        "icon" => "TwitterIcon"
+                    ],
+                    [
+                        "url" => "https://www.instagram.com/redqteam",
+                        "icon" => "InstagramIcon"
+                    ]
+                ],
+                "maintenance" => [
+                    "isUnderMaintenance" => false,
+                    "start" => null,
+                    "until" => null,
+                    "title" => "Site is under Maintenance",
+                    "description" => "We are currently undergoing essential maintenance to elevate your browsing experience.",
                 ],
             ],
         ];

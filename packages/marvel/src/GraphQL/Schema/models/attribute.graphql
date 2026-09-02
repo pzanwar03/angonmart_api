@@ -1,7 +1,6 @@
 
 extend type Query {
     attributes(
-        shop_id: ID @eq
         language: String @eq
         orderBy: _ @orderBy(columns: ["created_at", "name", "updated_at", "id"])
     ): [Attribute] @all
@@ -15,8 +14,6 @@ type Attribute {
     language: String
     translated_languages: [String]
     slug: String!
-    shop_id: ID!
-    shop: Shop @belongsTo
     values: [AttributeValue]
     created_at: DateTime
     updated_at: DateTime
@@ -31,7 +28,6 @@ input AttributeValueInput {
 
 input CreateAttributeInput {
     name: String! @rules(apply: ["min:2"])
-    shop_id: ID! @rules(apply: ["exists:shops,id"])
     language: String
     values: [AttributeValueInput]
     slug: String
@@ -39,7 +35,6 @@ input CreateAttributeInput {
 input UpdateAttributeInput {
     id: ID!
     name: String! @rules(apply: ["min:2"])
-    shop_id: ID! @rules(apply: ["exists:shops,id"])
     language: String
     values: [AttributeValueInput]
 }
@@ -51,6 +46,6 @@ extend type Mutation {
         @field(resolver: "AttributeMutator@updateAttribute")
     deleteAttribute(id: ID!): Attribute
         @field(resolver: "AttributeMutator@deleteAttribute")
-    importAttributes(shop_id: ID! @spread, csv: Upload!): Boolean
+    importAttributes(csv: Upload!): Boolean
         @field(resolver: "AttributeMutator@importAttributes")
 }

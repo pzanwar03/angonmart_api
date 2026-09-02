@@ -19,6 +19,7 @@ class MarvelSeeder extends Seeder
             RefundPolicySeeder::class,
             FaqSeeder::class,
             TermsAndConditionSeeder::class,
+            BdLocationSeeder::class,
         ]);
     }
 }

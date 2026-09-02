@@ -40,7 +40,6 @@ class CouponRequest extends FormRequest
             'code'                => ['required', Rule::unique('coupons')->where('language', $language)],
             'amount'              => $rules['amount'],
             'minimum_cart_amount' => ['required', 'numeric', 'min:0'],
-            'shop_id'             => ['nullable', 'exists:Marvel\Database\Models\Shop,id'],
             'type'                => ['required', Rule::in(CouponType::getValues())],
             'description'         => ['nullable', 'string'],
             'image'               => ['array'],

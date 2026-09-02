@@ -4,7 +4,6 @@ extend type Query {
         search: String
         searchJoin: String = "AND"
         sortedBy: String
-        shop_id: Int @eq
         order_id: Int @eq
         customer_id: Int @eq
         hasRefundReason: _ @whereHasConditions(columns: ["slug"])
@@ -23,7 +22,6 @@ type Refund {
     images: [Attachment]
     amount: Float
     status: RefundStatus
-    shop: Shop @belongsTo
     order: Order @belongsTo
     refund_reason_id: ID
     refund_reason: RefundReason @belongsTo

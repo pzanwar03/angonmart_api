@@ -59,9 +59,6 @@ class RefundRepository extends BaseRepository
         }
         try {
             $order = Order::findOrFail($request->order_id);
-            if ($order->parent !== null) {
-                throw new MarvelException(REFUND_ONLY_ALLOWED_FOR_MAIN_ORDER);
-            }
         } catch (Exception $th) {
             throw new MarvelException(NOT_FOUND);
         }
@@ -72,33 +69,13 @@ class RefundRepository extends BaseRepository
         $data['customer_id'] = $order->customer_id;
         $data['amount'] = $order->amount;
         $refund = $this->create($data);
-        $this->createChildOrderRefund($order->children, $data);
         return $this->find($refund->id);
-    }
-
-    public function createChildOrderRefund($orders, $data)
-    {
-        try {
-            foreach ($orders as  $order) {
-                $data['order_id'] = $order->id;
-                $data['customer_id'] = $order->customer_id;
-                $data['shop_id'] = $order->shop_id;
-                $data['amount'] = $order->amount;
-                $this->create($data);
-            }
-        } catch (Exception $th) {
-            throw new MarvelException(SOMETHING_WENT_WRONG);
-        }
     }
 
     public function updateRefund($request, $refund)
     {
-        if ($refund->shop_id !==  null) {
-            throw new MarvelException(WRONG_REFUND);
-        }
         $data = $request->only(['status']);
         $refund->update($data);
-        $this->changeShopSpecificRefundStatus($refund->order_id, $data);
 
         if ($refund['status'] == RefundStatus::APPROVED) {
             $orderData['order_status'] = OrderStatus::REFUNDED;
@@ -108,21 +85,9 @@ class RefundRepository extends BaseRepository
         return $refund;
     }
 
-    private function changeShopSpecificRefundStatus($order_id, $data)
+    private function changeOrderStatus($orderId, array $data)
     {
-        $order = Order::with('children')->findOrFail($order_id);
-
-        $childOrderIds = array_map(function ($childOrder) {
-            return $childOrder['id'];
-        }, $order->children->toArray());
-
-        $this->whereIn('order_id',  $childOrderIds)->update($data);
-    }
-
-    private function changeOrderStatus($parentOrderId, array $data)
-    {
-        $parentOrder = Order::findOrFail($parentOrderId);
-        $parentOrder->update($data);
-        Order::where('parent_id', $parentOrder->id)->update($data);
+        $order = Order::findOrFail($orderId);
+        $order->update($data);
     }
 }

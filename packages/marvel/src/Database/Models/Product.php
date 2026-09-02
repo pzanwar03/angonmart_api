@@ -36,6 +36,12 @@ class Product extends Model
         'image' => 'json',
         'gallery' => 'json',
         'video' => 'json',
+        'video_file' => 'json',
+        'highlights' => 'json',
+        'specifications' => 'json',
+        'is_verified' => 'boolean',
+        'is_preorder' => 'boolean',
+        'preorder_available_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -104,14 +110,6 @@ class Product extends Model
     public function type(): BelongsTo
     {
         return $this->belongsTo(Type::class, 'type_id');
-    }
-
-    /**
-     * @return BelongsTo
-     */
-    public function shop(): BelongsTo
-    {
-        return $this->belongsTo(Shop::class, 'shop_id');
     }
 
     /**
@@ -286,16 +284,6 @@ class Product extends Model
     public function flash_sales(): BelongsToMany
     {
         return $this->belongsToMany(FlashSale::class, 'flash_sale_products')->withPivot('flash_sale_id', 'product_id');
-    }
-
-    /**
-     * flash_sale_requests
-     *
-     * @return BelongsToMany
-     */
-    public function flash_sale_requests(): BelongsToMany
-    {
-        return $this->belongsToMany(FlashSaleRequests::class, "flash_sale_requests_products");
     }
 
     public function loadRelated($slug, $limit = 10, $language = DEFAULT_LANGUAGE)

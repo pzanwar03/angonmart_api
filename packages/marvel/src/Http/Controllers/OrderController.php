@@ -76,51 +76,11 @@ class OrderController extends CoreController
             throw new AuthorizationException(NOT_AUTHORIZED);
         }
 
-        switch ($user) {
-            case $user->hasPermissionTo(Permission::SUPER_ADMIN):
-                if (isset($request->shop_id)) {
-                    return $this->repository->with('children')->where('shop_id', '=', $request->shop_id)->where('parent_id', '!=', null);
-                } else {
-                    return $this->repository->with('children')->where('id', '!=', null)->where('parent_id', '=', null);
-                }
-                break;
-
-            case $user->hasPermissionTo(Permission::STORE_OWNER):
-                if ($this->repository->hasPermission($user, $request->shop_id)) {
-                    return $this->repository->with('children')->where('shop_id', '=', $request->shop_id)->where('parent_id', '!=', null);
-                } else {
-                    $orders = $this->repository->with('children')->where('parent_id', '!=', null)->whereIn('shop_id', $user->shops->pluck('id'));
-                    return $orders;
-                }
-                break;
-
-            case $user->hasPermissionTo(Permission::STAFF):
-                if ($this->repository->hasPermission($user, $request->shop_id)) {
-                    return $this->repository->with('children')->where('shop_id', '=', $request->shop_id)->where('parent_id', '!=', null);
-                } else {
-                    $orders = $this->repository->with('children')->where('parent_id', '!=', null)->where('shop_id', '=', $user->shop_id);
-                    return $orders;
-                }
-                break;
-
-            default:
-                return $this->repository->with('children')->where('customer_id', '=', $user->id)->where('parent_id', '=', null);
-                break;
+        if ($this->repository->hasPermission($user)) {
+            return $this->repository->where('id', '!=', null);
         }
 
-        // ********************* Old code *********************
-
-        // if ($user && $user->hasPermissionTo(Permission::SUPER_ADMIN) && (!isset($request->shop_id) || $request->shop_id === 'undefined')) {
-        //     return $this->repository->with('children')->where('id', '!=', null)->where('parent_id', '=', null); //->paginate($limit);
-        // } else if ($this->repository->hasPermission($user, $request->shop_id)) {
-        //     // if ($user && $user->hasPermissionTo(Permission::STORE_OWNER)) {
-        //     return $this->repository->with('children')->where('shop_id', '=', $request->shop_id)->where('parent_id', '!=', null); //->paginate($limit);
-        //     // } elseif ($user && $user->hasPermissionTo(Permission::STAFF)) {
-        //     //     return $this->repository->with('children')->where('shop_id', '=', $request->shop_id)->where('parent_id', '!=', null); //->paginate($limit);
-        //     // }
-        // } else {
-        //     return $this->repository->with('children')->where('customer_id', '=', $user->id)->where('parent_id', '=', null); //->paginate($limit);
-        // }
+        return $this->repository->where('customer_id', '=', $user->id);
     }
 
 
@@ -178,8 +138,6 @@ class OrderController extends CoreController
         try {
             $order = $this->repository->where('language', $language)->with([
                 'products',
-                'shop',
-                'children.shop',
                 'wallet_point',
             ])->where('id', $orderParam)->orWhere('tracking_number', $orderParam)->firstOrFail();
         } catch (ModelNotFoundException $e) {
@@ -199,13 +157,7 @@ class OrderController extends CoreController
         if (!$order->customer_id) {
             return $order;
         }
-        if ($user && $user->hasPermissionTo(Permission::SUPER_ADMIN)) {
-            return $order;
-        } elseif (isset($order->shop_id)) {
-            if ($user && ($this->repository->hasPermission($user, $order->shop_id) || $user->id == $order->customer_id)) {
-                return $order;
-            }
-        } elseif ($user && $user->id == $order->customer_id) {
+        if ($user && ($this->repository->hasPermission($user) || $user->id == $order->customer_id)) {
             return $order;
         } else {
             throw new AuthorizationException(NOT_AUTHORIZED);
@@ -223,7 +175,7 @@ class OrderController extends CoreController
     {
         $user = $request->user() ?? null;
         try {
-            $order = $this->repository->with(['products', 'children.shop', 'wallet_point', 'payment_intent'])
+            $order = $this->repository->with(['products', 'wallet_point', 'payment_intent'])
                 ->findOneByFieldOrFail('tracking_number', $tracking_number);
 
             if ($order->customer_id === null) {
@@ -280,22 +232,20 @@ class OrderController extends CoreController
      * Export order dynamic url
      *
      * @param Request $request
-     * @param int $shop_id
      * @return string
      */
-    public function exportOrderUrl(Request $request, $shop_id = null)
+    public function exportOrderUrl(Request $request)
     {
         try {
             $user = $request->user();
 
-            if ($user && !$this->repository->hasPermission($user, $request->shop_id)) {
+            if ($user && !$this->repository->hasPermission($user)) {
                 throw new AuthorizationException(NOT_AUTHORIZED);
             }
 
             $dataArray = [
                 'user_id' => $user->id,
                 'token' => Str::random(16),
-                'payload' => $request->shop_id
             ];
             $newToken = DownloadToken::create($dataArray);
 
@@ -313,18 +263,15 @@ class OrderController extends CoreController
      */
     public function exportOrder($token)
     {
-        $shop_id = 0;
         try {
             $downloadToken = DownloadToken::where('token', $token)->first();
-
-            $shop_id = $downloadToken->payload;
             $downloadToken->delete();
         } catch (MarvelException $e) {
             throw new MarvelException(TOKEN_NOT_FOUND);
         }
 
         try {
-            return Excel::download(new OrderExport($this->repository, $shop_id), 'orders.xlsx');
+            return Excel::download(new OrderExport($this->repository), 'orders.xlsx');
         } catch (MarvelException $e) {
             throw new MarvelException(NOT_FOUND);
         }
@@ -334,7 +281,6 @@ class OrderController extends CoreController
      * Export order dynamic url
      *
      * @param Request $request
-     * @param int $shop_id
      * @return string
      */
     public function downloadInvoiceUrl(Request $request)
@@ -342,7 +288,7 @@ class OrderController extends CoreController
 
         try {
             $user = $request->user();
-            if ($user && !$this->repository->hasPermission($user, $request->shop_id)) {
+            if ($user && !$this->repository->hasPermission($user)) {
                 throw new AuthorizationException(NOT_AUTHORIZED);
             }
             if (empty($request->order_id)) {
@@ -394,7 +340,7 @@ class OrderController extends CoreController
 
         try {
             $settings = Settings::getData($payloads['language']);
-            $order = $this->repository->with(['products', 'children.shop', 'wallet_point', 'parent_order'])->where('id', $payloads['order_id'])->orWhere('tracking_number', $payloads['order_id'])->firstOrFail();
+            $order = $this->repository->with(['products', 'wallet_point'])->where('id', $payloads['order_id'])->orWhere('tracking_number', $payloads['order_id'])->firstOrFail();
 
             $invoiceData = [
                 'order' => $order,
@@ -428,7 +374,7 @@ class OrderController extends CoreController
     {
         $tracking_number = $request->tracking_number ?? null;
         try {
-            $order = $this->repository->with(['products', 'children.shop', 'wallet_point', 'payment_intent'])
+            $order = $this->repository->with(['products', 'wallet_point', 'payment_intent'])
                 ->findOneByFieldOrFail('tracking_number', $tracking_number);
 
             $isFinal = $this->checkOrderStatusIsFinal($order);

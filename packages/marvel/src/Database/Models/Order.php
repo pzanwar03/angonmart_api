@@ -70,30 +70,6 @@ class Order extends Model
     }
 
     /**
-     * @return BelongsTo
-     */
-    public function shop(): BelongsTo
-    {
-        return $this->belongsTo(Shop::class, 'shop_id');
-    }
-
-    /**
-     * @return HasMany
-     */
-    public function children()
-    {
-        return $this->hasMany('Marvel\Database\Models\Order', 'parent_id', 'id');
-    }
-
-    /**
-     * @return HasOne
-     */
-    public function parent_order()
-    {
-        return $this->hasOne('Marvel\Database\Models\Order', 'id', 'parent_id');
-    }
-
-    /**
      * @return HasOne
      */
     public function refund()

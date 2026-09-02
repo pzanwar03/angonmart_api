@@ -5,11 +5,9 @@ namespace Marvel\Providers;
 use App\Events\QuestionAnswered;
 use App\Events\RefundApproved;
 use App\Events\ReviewCreated;
-use App\Listeners\CommissionRateUpdateListener;
 use App\Listeners\RatingRemoved;
 use App\Listeners\SendReviewNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Marvel\Events\CommissionRateUpdateEvent;
 use Marvel\Events\DigitalProductUpdateEvent;
 use Marvel\Events\FlashSaleProcessed;
 use Marvel\Events\Maintenance;
@@ -18,9 +16,7 @@ use Marvel\Events\OrderCancelled;
 use Marvel\Events\OrderCreated;
 use Marvel\Events\OrderDelivered;
 use Marvel\Events\OrderProcessed;
-use Marvel\Events\OrderReceived;
 use Marvel\Events\OrderStatusChanged;
-use Marvel\Events\OwnershipTransferStatusControl;
 use Marvel\Events\StoreNoticeEvent;
 use Marvel\Events\PaymentFailed;
 use Marvel\Events\PaymentMethods;
@@ -30,19 +26,15 @@ use Marvel\Events\ProductReviewApproved;
 use Marvel\Events\ProductReviewRejected;
 use Marvel\Events\RefundRequested;
 use Marvel\Events\RefundUpdate;
-use Marvel\Events\ShopMaintenance;
-use Marvel\Events\ProcessOwnershipTransition;
 use Marvel\Listeners\SendQuestionAnsweredNotification;
 use Marvel\Listeners\MessageParticipantNotification;
 use Marvel\Listeners\SendMessageNotification;
-use Marvel\Listeners\ShopMaintenanceListener;
 use Marvel\Listeners\StoreNoticeListener;
 use Marvel\Listeners\AppDataListener;
 use Marvel\Listeners\CheckAndSetDefaultCard;
 use Marvel\Listeners\DigitalProductNotifyLogsListener;
 use Marvel\Listeners\FlashSaleProductProcess;
 use Marvel\Listeners\MaintenanceNotification;
-use Marvel\Listeners\OwnershipTransferStatusControlListener;
 use Marvel\Listeners\ProductInventoryDecrement;
 use Marvel\Listeners\ProductInventoryRestore;
 use Marvel\Listeners\ProductReviewApprovedListener;
@@ -51,7 +43,6 @@ use Marvel\Listeners\Refund\SendRefundUpdateListener;
 use Marvel\Listeners\SendOrderCreationNotification;
 use Marvel\Listeners\SendOrderCancelledNotification;
 use Marvel\Listeners\SendOrderDeliveredNotification;
-use Marvel\Listeners\SendOrderReceivedNotification;
 use Marvel\Listeners\SendOrderStatusChangedNotification;
 use Marvel\Listeners\SendPaymentFailedNotification;
 use Marvel\Listeners\SendPaymentSuccessNotification;
@@ -59,7 +50,6 @@ use Marvel\Listeners\SendRefundRequestedListener;
 use Marvel\Listeners\StoredMessagedNotifyLogsListener;
 use Marvel\Listeners\StoredOrderNotifyLogsListener;
 use Marvel\Listeners\StoredStoreNoticeNotifyLogsListener;
-use Marvel\Listeners\TransferredShopOwnershipNotification;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -88,9 +78,6 @@ class EventServiceProvider extends ServiceProvider
             SendOrderCreationNotification::class,
             StoredOrderNotifyLogsListener::class
         ],
-        OrderReceived::class => [
-            SendOrderReceivedNotification::class
-        ],
         OrderProcessed::class => [
             ProductInventoryDecrement::class,
         ],
@@ -103,9 +90,6 @@ class EventServiceProvider extends ServiceProvider
         ],
         OrderStatusChanged::class => [
             SendOrderStatusChangedNotification::class
-        ],
-        OwnershipTransferStatusControl::class => [
-            OwnershipTransferStatusControlListener::class
         ],
         PaymentSuccess::class => [
             SendPaymentSuccessNotification::class
@@ -124,9 +108,6 @@ class EventServiceProvider extends ServiceProvider
         ],
         ProcessUserData::class => [
             AppDataListener::class
-        ],
-        ProcessOwnershipTransition::class => [
-            TransferredShopOwnershipNotification::class,
         ],
         QuestionAnswered::class => [
             SendQuestionAnsweredNotification::class
@@ -150,12 +131,6 @@ class EventServiceProvider extends ServiceProvider
         Maintenance::class => [
             MaintenanceNotification::class
         ],
-        CommissionRateUpdateEvent::class => [
-            CommissionRateUpdateListener::class
-        ],
-        ShopMaintenance::class => [
-            ShopMaintenanceListener::class
-        ]
     ];
 
     /**

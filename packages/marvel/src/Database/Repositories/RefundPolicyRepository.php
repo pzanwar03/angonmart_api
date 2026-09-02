@@ -17,9 +17,7 @@ class RefundPolicyRepository extends BaseRepository
         'slug' => 'like',
         'target',
         'status',
-        'shop_id',
         'description' => 'like',
-        'shop.slug',
     ];
 
     protected $dataArray = [
@@ -28,7 +26,6 @@ class RefundPolicyRepository extends BaseRepository
         'target',
         'status',
         'description',
-        'shop_id',
         'language',
     ];
     /**

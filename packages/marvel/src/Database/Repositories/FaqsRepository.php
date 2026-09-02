@@ -8,7 +8,6 @@ use Marvel\Database\Models\Faqs;
 use Prettus\Repository\Criteria\RequestCriteria;
 use Prettus\Repository\Exceptions\RepositoryException;
 use Illuminate\Http\Request;
-use Marvel\Database\Models\Shop;
 
 class FaqsRepository extends BaseRepository
 {
@@ -18,7 +17,6 @@ class FaqsRepository extends BaseRepository
      */
     protected $fieldSearchable = [
         'faq_title' => 'like',
-        'shop_id',
         'language',
         'faq_type',
         'issued_by'
@@ -62,17 +60,12 @@ class FaqsRepository extends BaseRepository
     public function storeFaqs($request)
     {
         try {
-            if (isset($request['shop_id'])) {
-                $shop = Shop::findOrFail($request['shop_id']);
-            }
-
             $faqs                    = [];
             $faqs['faq_title']       = $request['faq_title'];
             $faqs['faq_description'] = $request['faq_description'];
             $faqs['user_id']         = $request->user()->id;
-            $faqs['shop_id']         = isset($request['shop_id']) ? $request['shop_id'] : null;
-            $faqs['faq_type']        = isset($request['shop_id']) ? 'shop' : 'global';
-            $faqs['issued_by']       = isset($request['shop_id']) ? $shop->name : 'Super Admin';
+            $faqs['faq_type']        = 'global';
+            $faqs['issued_by']       = 'Super Admin';
             $faqs['language']        = $request['language'] ?? DEFAULT_LANGUAGE;
 
             $this->create($faqs);

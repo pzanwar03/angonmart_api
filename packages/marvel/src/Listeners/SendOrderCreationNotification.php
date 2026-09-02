@@ -3,7 +3,6 @@
 namespace Marvel\Listeners;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Marvel\Enums\EventType;
 use Marvel\Events\OrderCreated;
 use Marvel\Notifications\NewOrderReceived;
 use Marvel\Notifications\OrderPlacedSuccessfully;
@@ -22,18 +21,21 @@ class SendOrderCreationNotification implements ShouldQueue
      */
     public function handle(OrderCreated $event)
     {
-        $order = $event->order;
+        $order    = $event->order;
         $customer = $event->order->customer;
-        $emailReceiver = $this->getWhichUserWillGetEmail(EventType::ORDER_CREATED, $order->language);
-        if ($customer && $emailReceiver['customer'] && $order->parent_id == null) {
+
+        // Always send customer email (order confirmation + invoice PDF)
+        if ($customer) {
             $customer->notify(new OrderPlacedSuccessfully($event->invoiceData));
         }
-        if ($emailReceiver['admin']) {
-            $admins = $this->adminList();
-            foreach ($admins as $admin) {
-                $admin->notify(new NewOrderReceived($order, 'admin'));
-            }
+
+        // Always send merchant (admin) email
+        $admins = $this->adminList();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewOrderReceived($order, 'admin'));
         }
-        $this->sendOrderCreationSms($order);
+
+        // Always send customer + merchant SMS via smsgateway.com.bd, bypassing DB toggles
+        $this->sendOrderCreationSmsAlways($order);
     }
 }

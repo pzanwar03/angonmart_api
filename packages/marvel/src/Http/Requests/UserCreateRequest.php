@@ -31,10 +31,8 @@ class UserCreateRequest extends FormRequest
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'unique:users'],
             'password' => ['required', 'string'],
-            'shop_id' => ['nullable', 'exists:Marvel\Database\Models\Shop,id'],
             'profile'  => ['array'],
             'address'  => ['array'],
-            // 'shop'  => ['array'],
         ];
     }
 
