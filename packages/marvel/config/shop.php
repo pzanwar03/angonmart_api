@@ -13,6 +13,7 @@ return [
     'admin_email'       => env('ADMIN_EMAIL'),
 
     'merchant_contact'  => env('MERCHANT_CONTACT', '01911104686'),
+    'merchant_email'    => env('MERCHANT_EMAIL'),
 
     /*
     |--------------------------------------------------------------------------
