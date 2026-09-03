@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class CreateDeliveryZoneRequest extends FormRequest
+class CreateDeliveryScheduleRequest extends FormRequest
 {
     public function authorize()
     {
@@ -17,15 +17,10 @@ class CreateDeliveryZoneRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:191'],
-            'charge' => ['required', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
             'is_default' => ['nullable', 'boolean'],
-            'areas' => ['nullable', 'array'],
-            'areas.*.location_type' => ['required_with:areas', 'in:division,district,thana'],
-            'areas.*.location_id' => ['required_with:areas', 'integer'],
-            'charges' => ['nullable', 'array'],
-            'charges.*.delivery_schedule_id' => ['required_with:charges', 'integer', 'exists:delivery_schedules,id'],
-            'charges.*.charge' => ['required_with:charges', 'numeric', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

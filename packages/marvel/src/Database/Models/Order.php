@@ -69,6 +69,11 @@ class Order extends Model
         return $this->belongsTo(User::class, 'customer_id');
     }
 
+    public function delivery_schedule(): belongsTo
+    {
+        return $this->belongsTo(DeliverySchedule::class, 'delivery_schedule_id');
+    }
+
     /**
      * @return HasOne
      */

@@ -18,6 +18,7 @@ use Marvel\Http\Controllers\ConversationController;
 use Marvel\Http\Controllers\CouponController;
 use Marvel\Http\Controllers\DeliveryTimeController;
 use Marvel\Http\Controllers\DeliveryZoneController;
+use Marvel\Http\Controllers\DeliveryScheduleController;
 use Marvel\Http\Controllers\LocationController;
 use Marvel\Http\Controllers\DownloadController;
 use Marvel\Http\Controllers\FaqsController;
@@ -162,6 +163,8 @@ Route::apiResource('manufacturers', ManufacturerController::class, [
 Route::get('bd-divisions', [LocationController::class, 'divisions']);
 Route::get('bd-districts', [LocationController::class, 'districts']);
 Route::get('bd-thanas', [LocationController::class, 'thanas']);
+Route::get('delivery-schedules', [DeliveryScheduleController::class, 'index']);
+Route::get('delivery-schedules/{id}', [DeliveryScheduleController::class, 'show']);
 Route::post('orders/checkout/verify', [CheckoutController::class, 'verify']);
 Route::apiResource('orders', OrderController::class, [
     'only' => ['show', 'store'],
@@ -402,6 +405,9 @@ Route::group(['middleware' => ['permission:' . Permission::SUPER_ADMIN, 'auth:sa
     Route::apiResource('taxes', TaxController::class);
     Route::apiResource('shippings', ShippingController::class);
     Route::apiResource('delivery-zones', DeliveryZoneController::class);
+    Route::apiResource('delivery-schedules', DeliveryScheduleController::class, [
+        'only' => ['store', 'update', 'destroy'],
+    ]);
     Route::post('add-points', [UserController::class, 'addPoints']);
     Route::post('users/make-admin', [UserController::class, 'makeOrRevokeAdmin']);
     Route::apiResource(

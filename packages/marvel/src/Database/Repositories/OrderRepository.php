@@ -67,6 +67,7 @@ class OrderRepository extends BaseRepository
         'paid_total',
         'total',
         'delivery_time',
+        'delivery_schedule_id',
         'payment_gateway',
         'altered_payment_gateway',
         'discount',
@@ -179,7 +180,10 @@ class OrderRepository extends BaseRepository
                 && $settings['options']['freeShippingAmount'] <= $request['amount'];
             $request['delivery_fee'] = $freeShipping
                 ? 0
-                : app(DeliveryZoneRepository::class)->resolveCharge($request['shipping_address'] ?? []);
+                : app(DeliveryZoneRepository::class)->resolveCharge(
+                    $request['shipping_address'] ?? [],
+                    $request['delivery_schedule_id'] ?? null
+                );
         }
 
         $request['paid_total'] = $request['amount'] + $request['sales_tax'] + $request['delivery_fee'] -  $request['discount'];

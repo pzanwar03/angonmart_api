@@ -27,6 +27,7 @@ class CheckoutVerifyRequest extends FormRequest
             'shipping_address.division_id'    => 'required|integer|exists:bd_divisions,id',
             'shipping_address.district_id'    => 'required|integer|exists:bd_districts,id',
             'shipping_address.thana_id'       => 'required|integer|exists:bd_thanas,id',
+            'delivery_schedule_id'            => 'nullable|integer|exists:delivery_schedules,id',
         ];
     }
 

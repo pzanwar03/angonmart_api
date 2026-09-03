@@ -19,7 +19,7 @@ class DeliveryZoneController extends CoreController
 
     public function index(Request $request)
     {
-        return $this->repository->decorateAreas($this->repository->with('areas')->all());
+        return $this->repository->decorateAreas($this->repository->with(['areas', 'charges'])->all());
     }
 
     public function store(CreateDeliveryZoneRequest $request)
@@ -34,7 +34,7 @@ class DeliveryZoneController extends CoreController
     public function show($id)
     {
         try {
-            return $this->repository->decorateAreas($this->repository->with('areas')->findOrFail($id));
+            return $this->repository->decorateAreas($this->repository->with(['areas', 'charges'])->findOrFail($id));
         } catch (MarvelException $e) {
             throw new MarvelException(NOT_FOUND);
         }
