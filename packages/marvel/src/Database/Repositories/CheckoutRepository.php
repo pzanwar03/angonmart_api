@@ -89,7 +89,10 @@ class CheckoutRepository
             }
             $shippingAddress = $request['shipping_address'] ?? null;
             if (!empty($shippingAddress) && $this->hasLocationIds($shippingAddress)) {
-                return app(DeliveryZoneRepository::class)->resolveCharge($shippingAddress);
+                return app(DeliveryZoneRepository::class)->resolveCharge(
+                    $shippingAddress,
+                    $request['delivery_schedule_id'] ?? null
+                );
             }
             $settings = Settings::getData();
             $class_id = $settings['options']['shippingClass'];

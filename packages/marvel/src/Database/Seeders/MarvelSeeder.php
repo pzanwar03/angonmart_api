@@ -20,6 +20,7 @@ class MarvelSeeder extends Seeder
             FaqSeeder::class,
             TermsAndConditionSeeder::class,
             BdLocationSeeder::class,
+            DeliveryScheduleSeeder::class,
         ]);
     }
 }

@@ -8,6 +8,7 @@ use Marvel\Database\Models\BdDivision;
 use Marvel\Database\Models\BdThana;
 use Marvel\Database\Models\DeliveryZone;
 use Marvel\Database\Models\DeliveryZoneArea;
+use Marvel\Database\Models\DeliveryZoneScheduleCharge;
 use Prettus\Repository\Criteria\RequestCriteria;
 use Prettus\Repository\Exceptions\RepositoryException;
 
@@ -70,17 +71,22 @@ class DeliveryZoneRepository extends BaseRepository
             DeliveryZone::query()->update(['is_default' => false]);
         }
 
+        $charges = $data['charges'] ?? [];
+        unset($data['charges']);
+
         $zone = $this->create($data);
         $this->syncAreas($zone, $areas);
+        $this->syncCharges($zone, $charges);
 
-        return $zone->load('areas');
+        return $zone->load(['areas', 'charges']);
     }
 
     public function updateZone(int $id, array $data): DeliveryZone
     {
         $zone = $this->findOrFail($id);
         $areas = $data['areas'] ?? null;
-        unset($data['areas']);
+        $charges = $data['charges'] ?? null;
+        unset($data['areas'], $data['charges']);
 
         if (!empty($data['is_default'])) {
             DeliveryZone::query()->where('id', '!=', $id)->update(['is_default' => false]);
@@ -91,19 +97,22 @@ class DeliveryZoneRepository extends BaseRepository
         if (is_array($areas)) {
             $this->syncAreas($zone, $areas);
         }
+        if (is_array($charges)) {
+            $this->syncCharges($zone, $charges);
+        }
 
-        return $zone->fresh('areas');
+        return $zone->fresh(['areas', 'charges']);
     }
 
     /**
-     * Resolve the delivery charge for a shipping address.
-     * Most specific assignment wins: thana → district → division → default zone → 0.
+     * Resolve the matching delivery zone for a shipping address.
+     * Most specific assignment wins: thana → district → division → default zone.
      */
-    public function resolveCharge($shippingAddress): float
+    public function resolveZone($shippingAddress): ?DeliveryZone
     {
         $address = $this->normalizeAddress($shippingAddress);
         if (empty($address)) {
-            return $this->defaultCharge();
+            return $this->defaultZone();
         }
 
         $thanaId = $address['thana_id'] ?? null;
@@ -138,21 +147,78 @@ class DeliveryZoneRepository extends BaseRepository
                 ->first();
 
             if ($area && $area->zone) {
-                return (float) $area->zone->charge;
+                return $area->zone;
             }
         }
 
-        return $this->defaultCharge();
+        return $this->defaultZone();
+    }
+
+    /**
+     * Resolve the delivery charge for a shipping address and optional schedule.
+     * Matrix charge (zone + schedule) wins; otherwise the zone fallback charge.
+     */
+    public function resolveCharge($shippingAddress, $scheduleId = null): float
+    {
+        $zone = $this->resolveZone($shippingAddress);
+        if (!$zone) {
+            return 0;
+        }
+
+        if ($scheduleId) {
+            $matrix = DeliveryZoneScheduleCharge::query()
+                ->where('delivery_zone_id', $zone->id)
+                ->where('delivery_schedule_id', $scheduleId)
+                ->first();
+            if ($matrix) {
+                return (float) $matrix->charge;
+            }
+        }
+
+        return (float) $zone->charge;
+    }
+
+    protected function defaultZone(): ?DeliveryZone
+    {
+        return DeliveryZone::query()
+            ->where('is_active', true)
+            ->where('is_default', true)
+            ->first();
     }
 
     protected function defaultCharge(): float
     {
-        $default = DeliveryZone::query()
-            ->where('is_active', true)
-            ->where('is_default', true)
-            ->first();
+        $default = $this->defaultZone();
 
         return $default ? (float) $default->charge : 0;
+    }
+
+    protected function syncCharges(DeliveryZone $zone, array $charges): void
+    {
+        $normalized = collect($charges)
+            ->filter(fn ($charge) => !empty($charge['delivery_schedule_id']))
+            ->map(fn ($charge) => [
+                'delivery_schedule_id' => (int) $charge['delivery_schedule_id'],
+                'charge' => (float) ($charge['charge'] ?? 0),
+            ])
+            ->unique('delivery_schedule_id')
+            ->values();
+
+        $keepIds = $normalized->pluck('delivery_schedule_id')->all();
+        $zone->charges()
+            ->when(
+                !empty($keepIds),
+                fn ($query) => $query->whereNotIn('delivery_schedule_id', $keepIds),
+                fn ($query) => $query
+            )
+            ->delete();
+
+        foreach ($normalized as $row) {
+            $zone->charges()->updateOrCreate(
+                ['delivery_schedule_id' => $row['delivery_schedule_id']],
+                ['charge' => $row['charge']]
+            );
+        }
     }
 
     protected function syncAreas(DeliveryZone $zone, array $areas): void

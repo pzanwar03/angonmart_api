@@ -6,33 +6,28 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class DeliveryZone extends Model
+class DeliverySchedule extends Model
 {
-    protected $table = 'delivery_zones';
+    protected $table = 'delivery_schedules';
 
     public $guarded = [];
 
     protected $casts = [
-        'charge' => 'float',
         'is_active' => 'boolean',
         'is_default' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     protected static function boot()
     {
         parent::boot();
         static::addGlobalScope('order', function (Builder $builder) {
-            $builder->orderBy('updated_at', 'desc');
+            $builder->orderBy('sort_order')->orderBy('id');
         });
-    }
-
-    public function areas(): HasMany
-    {
-        return $this->hasMany(DeliveryZoneArea::class, 'delivery_zone_id');
     }
 
     public function charges(): HasMany
     {
-        return $this->hasMany(DeliveryZoneScheduleCharge::class, 'delivery_zone_id');
+        return $this->hasMany(DeliveryZoneScheduleCharge::class, 'delivery_schedule_id');
     }
 }

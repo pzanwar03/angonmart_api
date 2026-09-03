@@ -35,6 +35,7 @@ class OrderCreateRequest extends FormRequest
             'paid_total'              => 'required|numeric',
             'total'                   => 'required|numeric',
             'delivery_time'           => 'nullable|string',
+            'delivery_schedule_id'    => 'nullable|integer|exists:delivery_schedules,id',
             'customer_contact'        => 'string|required',
             'customer_name'           => 'nullable|string',
             'payment_gateway'         => ['required', Rule::in(PaymentGatewayType::getValues())],
