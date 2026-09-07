@@ -22,9 +22,8 @@ class SendOrderCreationNotification implements ShouldQueue
     public function handle(OrderCreated $event)
     {
         $order    = $event->order;
-        $customer = $event->order->customer;
+        $customer = $event->user ?? $event->order->customer;
 
-        // Customer email (logged-in users only). Guests get SMS only.
         try {
             if ($customer && $customer->email) {
                 $customer->notify(new OrderPlacedSuccessfully($event->invoiceData));
@@ -33,18 +32,33 @@ class SendOrderCreationNotification implements ShouldQueue
             info('Order creation customer email failed: ' . $e->getMessage());
         }
 
-        // Merchant email to MERCHANT_EMAIL
         try {
+            $sentEmails = [];
+
+            foreach ($this->adminList() as $admin) {
+                if (!$admin->email) {
+                    continue;
+                }
+                $normalized = strtolower(trim($admin->email));
+                if (isset($sentEmails[$normalized])) {
+                    continue;
+                }
+                $admin->notify(new NewOrderReceived($order, 'admin'));
+                $sentEmails[$normalized] = true;
+            }
+
             $merchantEmail = config('shop.merchant_email');
             if ($merchantEmail) {
-                Notification::route('mail', $merchantEmail)
-                    ->notify(new NewOrderReceived($order, 'admin'));
+                $normalized = strtolower(trim($merchantEmail));
+                if (!isset($sentEmails[$normalized])) {
+                    Notification::route('mail', $merchantEmail)
+                        ->notify(new NewOrderReceived($order, 'admin'));
+                }
             }
         } catch (\Throwable $e) {
-            info('Order creation merchant email failed: ' . $e->getMessage());
+            info('Order creation admin email failed: ' . $e->getMessage());
         }
 
-        // Customer + merchant SMS (already try/caught inside the trait)
         try {
             $this->sendOrderCreationSmsAlways($order);
         } catch (\Throwable $e) {
