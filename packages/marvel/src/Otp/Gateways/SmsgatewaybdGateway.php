@@ -118,6 +118,11 @@ class SmsgatewaybdGateway implements OtpInterface
     private function postSms(string $phone_number, string $message): bool
     {
         try {
+            if ($this->clientId === '' || $this->key === '') {
+                info('SmsgatewaybdGateway: SMSGATEWAYBD_CLIENT_ID or SMSGATEWAYBD_KEY is empty.');
+                return false;
+            }
+
             $payload = [
                 'client_id' => $this->clientId,
                 'key'       => $this->key,
@@ -134,9 +139,20 @@ class SmsgatewaybdGateway implements OtpInterface
                 ->post($this->baseUrl . '/send-message', $payload);
 
             $body = $response->json();
+            $ok   = $response->successful()
+                && in_array($body['response_code'] ?? $body['status'] ?? null, [200, '200', 'success', 'OK'], true);
 
-            return ($body['response_code'] ?? null) === 200;
+            if (!$ok) {
+                info('SmsgatewaybdGateway send failed', [
+                    'status'   => $response->status(),
+                    'phone'    => $payload['recipient'],
+                    'response' => is_array($body) ? collect($body)->except(['key'])->all() : $response->body(),
+                ]);
+            }
+
+            return $ok;
         } catch (\Throwable $e) {
+            info('SmsgatewaybdGateway exception: ' . $e->getMessage());
             return false;
         }
     }

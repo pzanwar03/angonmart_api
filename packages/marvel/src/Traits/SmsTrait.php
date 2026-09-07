@@ -11,6 +11,7 @@ use Marvel\Database\Models\User;
 use Marvel\Enums\EventType;
 use Marvel\Enums\Permission;
 use Marvel\Otp\Gateways\OtpGateway;
+use Marvel\Otp\Gateways\SmsgatewaybdGateway;
 
 trait SmsTrait
 {
@@ -85,9 +86,24 @@ trait SmsTrait
      */
     protected function getOtpGateway()
     {
+        return new OtpGateway($this->resolveOtpGateway());
+    }
+
+    /**
+     * Order / OTP SMS uses SMS Gateway BD when those credentials exist.
+     */
+    protected function resolveOtpGateway()
+    {
+        $clientId = config('services.smsgatewaybd.client_id');
+        $key      = config('services.smsgatewaybd.key');
+
+        if (!empty($clientId) && !empty($key)) {
+            return new SmsgatewaybdGateway();
+        }
+
         $gateway = config('auth.active_otp_gateway');
         $gateWayClass = "Marvel\\Otp\\Gateways\\" . ucfirst($gateway) . 'Gateway';
-        return new OtpGateway(new $gateWayClass());
+        return new $gateWayClass();
     }
 
     /**

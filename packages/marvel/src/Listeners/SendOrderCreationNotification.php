@@ -26,7 +26,7 @@ class SendOrderCreationNotification implements ShouldQueue
 
         try {
             if ($customer && $customer->email) {
-                $customer->notify(new OrderPlacedSuccessfully($event->invoiceData));
+                $customer->notifyNow(new OrderPlacedSuccessfully($event->invoiceData));
             }
         } catch (\Throwable $e) {
             info('Order creation customer email failed: ' . $e->getMessage());
@@ -43,7 +43,7 @@ class SendOrderCreationNotification implements ShouldQueue
                 if (isset($sentEmails[$normalized])) {
                     continue;
                 }
-                $admin->notify(new NewOrderReceived($order, 'admin'));
+                $admin->notifyNow(new NewOrderReceived($order, 'admin'));
                 $sentEmails[$normalized] = true;
             }
 
@@ -52,7 +52,7 @@ class SendOrderCreationNotification implements ShouldQueue
                 $normalized = strtolower(trim($merchantEmail));
                 if (!isset($sentEmails[$normalized])) {
                     Notification::route('mail', $merchantEmail)
-                        ->notify(new NewOrderReceived($order, 'admin'));
+                        ->notifyNow(new NewOrderReceived($order, 'admin'));
                 }
             }
         } catch (\Throwable $e) {
