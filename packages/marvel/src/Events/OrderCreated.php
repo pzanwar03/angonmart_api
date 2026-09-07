@@ -3,7 +3,6 @@
 
 namespace Marvel\Events;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Marvel\Database\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -21,7 +20,7 @@ use Marvel\Exceptions\MarvelException;
 use Marvel\Enums\Permission;
 use Marvel\Traits\UsersTrait;
 
-class OrderCreated implements ShouldQueue, ShouldBroadcast
+class OrderCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels, UsersTrait;
 
