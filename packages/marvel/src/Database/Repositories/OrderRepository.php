@@ -308,7 +308,7 @@ class OrderRepository extends BaseRepository
             $products = $this->processProducts($request['products'], $request['customer_id'], $order);
             $order->products()->attach($products);
             $invoiceData = $this->createInvoiceDataForEmail($request, $order);
-            $customer = $request->user() ?? null;
+            $customer = $order->customer_id ? User::find($order->customer_id) : null;
             event(new OrderCreated($order, $invoiceData, $customer));
             return $order;
         } catch (Exception $e) {

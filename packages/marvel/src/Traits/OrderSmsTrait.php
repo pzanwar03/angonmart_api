@@ -43,8 +43,9 @@ trait OrderSmsTrait
 
     /**
      * Always send order-creation SMS regardless of DB settings toggles:
-     * - Customer receives a confirmation SMS.
-     * - Merchant (MERCHANT_CONTACT) receives a new-order alert SMS.
+     * - Customer receives a confirmation SMS if customer_contact is set.
+     * - Each super-admin with a profile contact receives a new-order alert.
+     * - Merchant (MERCHANT_CONTACT) is notified if set and not already sent.
      */
     public function sendOrderCreationSmsAlways(Order $order): void
     {
@@ -52,19 +53,45 @@ trait OrderSmsTrait
             App::setLocale($order->language ?? DEFAULT_LANGUAGE);
             $gateway         = $this->getOtpGateway();
             $customerMessage = __('sms.order.orderCreated.customer.message', ['ORDER_TRACKING_NUMBER' => $order->tracking_number]);
-            $merchantMessage = __('sms.order.orderCreated.admin.message', ['ORDER_TRACKING_NUMBER' => $order->tracking_number]);
-            $merchantContact = config('shop.merchant_contact');
+            $adminMessage    = __('sms.order.orderCreated.admin.message', ['ORDER_TRACKING_NUMBER' => $order->tracking_number]);
+            $sentContacts    = [];
 
-            if ($order->customer_contact) {
-                $gateway->sendSms($order->customer_contact, $customerMessage);
+            $customerContact = trim((string) $order->customer_contact);
+            if ($customerContact !== '') {
+                $gateway->sendSms($customerContact, $customerMessage);
+                $sentContacts[$this->normalizeSmsContact($customerContact)] = true;
             }
 
-            if ($merchantContact) {
-                $gateway->sendSms($merchantContact, $merchantMessage);
+            $admins = $this->adminList();
+            $admins->loadMissing('profile');
+            foreach ($admins as $admin) {
+                $contact = trim((string) ($admin->profile?->contact ?? ''));
+                if ($contact === '') {
+                    continue;
+                }
+                $normalized = $this->normalizeSmsContact($contact);
+                if (isset($sentContacts[$normalized])) {
+                    continue;
+                }
+                $gateway->sendSms($contact, $adminMessage);
+                $sentContacts[$normalized] = true;
+            }
+
+            $merchantContact = trim((string) config('shop.merchant_contact'));
+            if ($merchantContact !== '') {
+                $normalized = $this->normalizeSmsContact($merchantContact);
+                if (!isset($sentContacts[$normalized])) {
+                    $gateway->sendSms($merchantContact, $adminMessage);
+                }
             }
         } catch (\Exception $e) {
             info('sendOrderCreationSmsAlways failed: ' . $e->getMessage());
         }
+    }
+
+    protected function normalizeSmsContact(string $contact): string
+    {
+        return preg_replace('/\D+/', '', $contact) ?: strtolower(trim($contact));
     }
 
     public function sendPaymentDoneSuccessfullySms(Order $order): void
