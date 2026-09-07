@@ -2,14 +2,13 @@
 
 namespace Marvel\Listeners;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Notification;
 use Marvel\Events\OrderCreated;
 use Marvel\Notifications\NewOrderReceived;
 use Marvel\Notifications\OrderPlacedSuccessfully;
 use Marvel\Traits\OrderSmsTrait;
 
-class SendOrderCreationNotification implements ShouldQueue
+class SendOrderCreationNotification
 {
     use OrderSmsTrait;
 

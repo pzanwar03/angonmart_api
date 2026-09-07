@@ -309,7 +309,9 @@ class OrderRepository extends BaseRepository
             $order->products()->attach($products);
             $invoiceData = $this->createInvoiceDataForEmail($request, $order);
             $customer = $order->customer_id ? User::find($order->customer_id) : null;
-            event(new OrderCreated($order, $invoiceData, $customer));
+            DB::afterCommit(function () use ($order, $invoiceData, $customer) {
+                event(new OrderCreated($order, $invoiceData, $customer));
+            });
             return $order;
         } catch (Exception $e) {
             throw $e;
