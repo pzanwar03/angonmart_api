@@ -14,6 +14,7 @@ use Marvel\Http\Controllers\AttributeValueController;
 use Marvel\Http\Controllers\AuthorController;
 use Marvel\Http\Controllers\CategoryController;
 use Marvel\Http\Controllers\CheckoutController;
+use Marvel\Http\Controllers\ClientController;
 use Marvel\Http\Controllers\ConversationController;
 use Marvel\Http\Controllers\CouponController;
 use Marvel\Http\Controllers\DeliveryTimeController;
@@ -405,6 +406,7 @@ Route::group(['middleware' => ['permission:' . Permission::SUPER_ADMIN, 'auth:sa
     Route::apiResource('taxes', TaxController::class);
     Route::apiResource('shippings', ShippingController::class);
     Route::apiResource('delivery-zones', DeliveryZoneController::class);
+    Route::apiResource('clients', ClientController::class);
     Route::apiResource('delivery-schedules', DeliveryScheduleController::class, [
         'only' => ['store', 'update', 'destroy'],
     ]);
