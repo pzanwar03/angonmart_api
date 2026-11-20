@@ -14,4 +14,5 @@ final class Role extends Enum
     public const SUPER_ADMIN = 'super_admin';
     public const STAFF = 'staff';
     public const CUSTOMER = 'customer';
+    public const CLIENT = 'client';
 }

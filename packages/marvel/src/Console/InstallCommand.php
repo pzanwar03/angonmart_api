@@ -84,6 +84,7 @@ class InstallCommand extends Command
         Permission::firstOrCreate(['name' => UserPermission::SUPER_ADMIN]);
         Permission::firstOrCreate(['name' => UserPermission::CUSTOMER]);
         Permission::firstOrCreate(['name' => UserPermission::STAFF]);
+        Permission::firstOrCreate(['name' => UserPermission::CLIENT]);
 
         $superAdminPermissions = [UserPermission::SUPER_ADMIN, UserPermission::STAFF, UserPermission::CUSTOMER];
         $staffPermissions = [UserPermission::STAFF, UserPermission::CUSTOMER];
@@ -92,6 +93,7 @@ class InstallCommand extends Command
         Role::firstOrCreate(['name' => UserRole::SUPER_ADMIN])->syncPermissions($superAdminPermissions);
         Role::firstOrCreate(['name' => UserRole::STAFF])->syncPermissions($staffPermissions);
         Role::firstOrCreate(['name' => UserRole::CUSTOMER])->syncPermissions($customerPermissions);
+        Role::firstOrCreate(['name' => UserRole::CLIENT])->syncPermissions([UserPermission::CLIENT]);
 
         $this->call('marvel:create-admin'); // creating Admin
 

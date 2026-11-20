@@ -2,6 +2,7 @@
 
 namespace Marvel\Http\Controllers;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Marvel\Database\Repositories\ClientRepository;
 use Marvel\Exceptions\MarvelException;
@@ -19,19 +20,19 @@ class ClientController extends CoreController
 
     public function index(Request $request)
     {
-        return $this->repository->all();
+        return $this->repository->listClients();
     }
 
     public function store(CreateClientRequest $request)
     {
-        return $this->repository->create($request->validated());
+        return $this->repository->storeClient($request->validated());
     }
 
     public function show($id)
     {
         try {
-            return $this->repository->findOrFail($id);
-        } catch (MarvelException $e) {
+            return $this->repository->decorate($this->repository->findClient($id));
+        } catch (ModelNotFoundException $e) {
             throw new MarvelException(NOT_FOUND);
         }
     }
@@ -39,11 +40,8 @@ class ClientController extends CoreController
     public function update(UpdateClientRequest $request, $id)
     {
         try {
-            $client = $this->repository->findOrFail($id);
-            $client->update($request->validated());
-
-            return $client->fresh();
-        } catch (MarvelException $e) {
+            return $this->repository->updateClient($id, $request->validated());
+        } catch (ModelNotFoundException $e) {
             throw new MarvelException(NOT_FOUND);
         }
     }
@@ -51,8 +49,8 @@ class ClientController extends CoreController
     public function destroy($id)
     {
         try {
-            return $this->repository->findOrFail($id)->delete();
-        } catch (MarvelException $e) {
+            return $this->repository->deleteClient($id);
+        } catch (ModelNotFoundException $e) {
             throw new MarvelException(NOT_FOUND);
         }
     }

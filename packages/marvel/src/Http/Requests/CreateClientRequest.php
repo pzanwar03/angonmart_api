@@ -17,8 +17,8 @@ class CreateClientRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:191'],
+            'email' => ['required', 'email', 'max:191', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'email' => ['nullable', 'email', 'max:191'],
             'address' => ['nullable', 'string'],
         ];
     }
