@@ -61,7 +61,19 @@
            $authorLocation = $authorDetails['location'];
            $currency = isset($settings['currency']) ? $settings['currency']: 'USD';
 
+           if($order->parent_id) {
+               $parentOrder = $order->parent;
+           }else{
+               $parentOrder = $order;
+           }
            $cancelled_products = [];
+           foreach ($parentOrder->children as $childOrder) {
+              if($childOrder->order_status == 'order-cancelled') {
+                     foreach ($childOrder->products as $product) {
+                       $cancelled_products[] = $product->id;
+                     }
+              }
+           }
 
        @endphp
 

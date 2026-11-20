@@ -42,7 +42,19 @@
             $amountDue = 0;
         }
 
+        if ($order->parent_id) {
+            $parentOrder = $order->parent_order;
+        } else {
+            $parentOrder = $order;
+        }
         $cancelled_products = [];
+        foreach ($parentOrder->children as $childOrder) {
+            if ($childOrder->order_status == 'order-cancelled') {
+                foreach ($childOrder->products as $product) {
+                    $cancelled_products[] = $product->id;
+                }
+            }
+        }
         
     @endphp
 
