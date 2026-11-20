@@ -1,387 +1,312 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ $language ?? 'en' }}">
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Order Invoice</title>
     <style type="text/css">
+        @page {
+            margin: 18px 20px;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e7f4ec;
+            color: #1c2b23;
+            font-family: DejaVu Sans, Arial, sans-serif;
+            font-size: 12px;
         }
     </style>
-    @if ($language === 'bn')
+    @if (($language ?? '') === 'bn')
         <style type="text/css">
             body {
-                font-family: Arial, DejaVu Sans, sans-serif, 'bangla';
+                font-family: DejaVu Sans, Arial, sans-serif, bangla;
             }
         </style>
     @endif
-    <style type="text/css">
-        body {
-            font-family: Arial, DejaVu Sans, sans-serif, 'bangla';
-        }
-    </style>
 </head>
 
 <body>
     @php
-        $contactDetails = $settings->options['contactDetails'];
+        $options = $settings->options ?? [];
+        $authorDetails = $options['contactDetails'] ?? [];
+        $authorLocation = $authorDetails['location'] ?? [];
         $customer = $order->customer;
-        $shippingAddress = $order->shipping_address;
+        $shippingAddress = $order->shipping_address ?? [];
         $products = $order->products;
-        $settings = $settings->options;
-        $authorDetails = $settings['contactDetails'];
-        $authorLocation = $authorDetails['location'];
-        $currency = isset($settings['currency']) ? $settings['currency'] : 'USD';
-        $currencyOptions = isset($settings['currencyOptions']) ? $settings['currencyOptions'] : ['formation' => 'en-US', 'fractions' => 2];
+        $currency = $options['currency'] ?? 'USD';
+        $currencyOptions = $options['currencyOptions'] ?? ['formation' => 'en-US', 'fractions' => 2];
         $locale = $currencyOptions['formation'] ?? 'en-US';
 
         $amountDue = $order->payment_status !== 'payment-success' ? $order->paid_total - intval($order?->wallet_point?->amount) : 0;
-
         if ($order->order_status === 'order-completed') {
             $amountDue = 0;
         }
 
         $cancelled_products = [];
-        
+
+        $logoPath = public_path('logo.png');
+        $logoSrc = is_file($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : '';
+
+        $label = function ($key, $fallback) use ($translated_text) {
+            return $translated_text[$key] ?? $fallback;
+        };
+
+        $money = function ($amount) use ($currency, $locale) {
+            return formatCurrency((float) ($amount ?? 0), $currency, $locale);
+        };
+
+        $addressParts = array_filter([
+            $shippingAddress['street_address'] ?? null,
+            $shippingAddress['city'] ?? null,
+            $shippingAddress['state'] ?? null,
+            $shippingAddress['zip'] ?? null,
+            $shippingAddress['country'] ?? null,
+        ]);
+
+        $invoiceDate = $order->created_at ? $order->created_at->format('j M Y') : date('j M Y');
+        $orderStatus = ucwords(str_replace(['order-', '-'], ['', ' '], (string) $order->order_status));
+        $paymentStatus = ucwords(str_replace(['payment-', '-'], ['', ' '], (string) $order->payment_status));
     @endphp
 
-    <div style="display: block;">
-        <div style="width: 50%; {{ $is_rtl ? ' direction: ltr;' : 'float: left;' }} float: left;">
-            @if (isset($translated_text['invoice_no']) || isset($order->tracking_number))
-                <p>{{ $translated_text['invoice_no'] }}: {{ $order->tracking_number }}</p>
-            @endif
-            @if (isset($translated_text['delivery_time']) || isset($order->delivery_time))
-                <p>{{ isset($translated_text['payment_method']) ? $translated_text['payment_method'] : 'Payment Method' }}:
-                    {{ $order->payment_gateway }}</p>
-            @endif
-        </div>
-        <div
-            style="width: 49%; {{ $is_rtl
-                ? ' direction: rtl; float: left; margin-left: 10px;'
-                : 'float: right; text-align: right; margin-right: 5px;' }}">
-            @if (isset($translated_text['date']))
-                <p>{{ $translated_text['date'] }}: {{ date('jS F, Y') }}</p>
-            @endif
-        </div>
-        <div style="clear: both;"></div>
-    </div>
-
-    <div style="height: 30px;"></div>
-
-    <div style="display: block;">
-        <ul
-            style="width: 50%; {{ $is_rtl ? ' direction: rtl; float: right;' : 'float: left;' }} list-style: none;
-            margin: 0; padding: 0;">
-            @if (isset($customer['name']))
-                <li style="display: block; font-size: 18px; font-weight:bold;">
-                    <div style="margin-bottom: 10px">{{ $customer['name'] }}</div>
-                </li>
-            @endif
-
-            @if (isset($customer['email']))
-                <li style="display: block; color: #6f6f6f; font-size:14px;">
-                    <div style="margin-bottom: 5x">{{ $customer['email'] }}</div>
-                </li>
-            @endif
-
-            @if (isset($order->customer_contact))
-                <li style="display: block; color: #6f6f6f; font-size:14px;">
-                    <div style="margin-bottom: 5x">{{ $order->customer_contact }}</div>
-                </li>
-            @endif
-
-            <li>
-                <ul style="list-style: none; margin: 0; padding: 0;">
-                    @if (isset($shippingAddress['street_address']))
-                        <li style="display: block; color: #6f6f6f; font-size:14px;">
-                            {{ $shippingAddress['street_address'] }}
-                        </li>
-                    @endif
-
-                    @if (isset($shippingAddress['city']))
-                        <li style="display: block; color: #6f6f6f; font-size:14px;">{{ $shippingAddress['city'] }}</li>
-                    @endif
-
-                    @if (isset($shippingAddress['state']))
-                        <li style="display: block; color: #6f6f6f; font-size:14px;">{{ $shippingAddress['state'] }}
-                        </li>
-                    @endif
-
-                    @if (isset($shippingAddress['zip']))
-                        <li style="display: block; color: #6f6f6f; font-size:14px;">{{ $shippingAddress['zip'] }}</li>
-                    @endif
-
-                    @if (isset($shippingAddress['country']))
-                        <li style="display: block; color: #6f6f6f; font-size:14px;">{{ $shippingAddress['country'] }}
-                            </;>
-                    @endif
-                </ul>
-            </li>
-        </ul>
-
-        <ul
-            style="width: 49%; {{ $is_rtl
-                ? ' direction: ltr; margin: 0; margin-left: 10px;'
-                : 'text-align: right; margin: 0; margin-right: 5px;' }} list-style: none; padding: 0; float: right;">
-            @if (isset($settings['siteTitle']))
-                <li style="display: block; color: #000000; font-size:18px; font-weight:bold">
-                    <div style="margin-bottom: 10px">{{ $settings['siteTitle'] }}</div>
-                </li>
-            @endif
-
-            @if (isset($authorDetails['website']))
-                <li style="display: block; color: #6f6f6f; font-size:14px;">
-                    <div>{{ $authorDetails['website'] }}</div>
-                </li>
-            @endif
-
-            @if (isset($authorDetails['contact']))
-                <li style="display: block; color: #6f6f6f; font-size:14px;">
-                    <div>{{ $authorDetails['contact'] }}</div>
-                </li>
-            @endif
-
-            @if (isset($authorLocation['formattedAddress']))
-                <li style="display: block; color: #6f6f6f; font-size:14px;">
-                    <div>{{ $authorLocation['formattedAddress'] }}</div>
-                </li>
-            @endif
-        </ul>
-        <div style="clear: both;"></div>
-    </div>
-
-    <div style="height: 30px;"></div>
-
-    @if (isset($translated_text['products']) || isset($translated_text['quantity']) || isset($translated_text['total']))
-        <ul style="list-style: none; margin: 0; padding: 0;">
-            @if (isset($translated_text['products']))
-                <li
-                    style="{{ $is_rtl ? ' direction: rtl; float: right;' : 'float: left; border-right: 1px solid #02705a;' }}
-            width: 39%; display: inline-block;">
-                    <div style="background-color:#019376; color: #FFF; font : normal 14px; padding:5px 8px;">
-                        <span style="display: block">{{ $translated_text['products'] }}</span>
-                    </div>
-                </li>
-            @endif
-
-            @if (isset($translated_text['quantity']))
-                <li
-                    style="{{ $is_rtl
-                        ? ' direction: rtl; float: right; border-left: 1px solid #02705a;'
-                        : 'float: left; border-right: 1px solid #02705a;' }} text-align: center; width: 30%; display:
-            inline-block;">
-                    <div style="background-color:#019376; color: #FFF; font : normal 14px; padding:5px 8px;">
-                        <span style="display: block">{{ $translated_text['quantity'] }}</span>
-                    </div>
-                </li>
-            @endif
-
-            @if (isset($translated_text['total']))
-                <li
-                    style="{{ $is_rtl ? ' direction: rtl; float: right; text-align: left;' : 'float: left; text-align: right;' }} width: 30%; display: inline-block;">
-                    <div style="background-color:#019376; color: #FFF; font : normal 14px; padding:5px 8px;">
-                        <span style="display: block">{{ $translated_text['total'] }}</span>
-                    </div>
-                </li>
-            @endif
-            <li style="clear: both;"></li>
-        </ul>
-    @endif
-
-    @if (!empty($products))
-        @foreach ($products as $product)
-            <ul style="list-style: none; margin: 0; padding: 0;">
-                <li
-                    style="{{ $is_rtl
-                        ? ' direction: rtl; float: right; border-left: solid 1px #d4d4d4;'
-                        : 'float: left; border-right: solid 1px #d4d4d4;' }} width: 39%; display: inline-block; border-bottom: solid
-            1px #d4d4d4;">
-                    <div style="display: block; padding: 7px; box-sizing: broder-box;">
-                        {{ $product['name'] }}
-                        @if (in_array($product->id, $cancelled_products))
-                            <small style="color: red;">{{ $translated_text['cancelled'] ?? 'Cancelled' }}</small>
-                        @endif
-                    </div>
-                </li>
-                <li
-                    style="{{ $is_rtl
-                        ? ' direction: rtl; float: right; border-left: solid 1px #d4d4d4;'
-                        : 'float: left; border-right: solid 1px #d4d4d4;' }} text-align: center; width: 30%; display: inline-block;
-            border-bottom: solid 1px #d4d4d4;">
-                    <div style="display: block; padding: 7px; box-sizing: broder-box;">
-                        {{ $product->pivot['order_quantity'] }}
-                    </div>
-                </li>
-                <li
-                    style="{{ $is_rtl ? ' direction: rtl; float: right; text-align: left;' : 'float: left; text-align: right;' }} width: 30%; display: inline-block; border-bottom: solid 1px #d4d4d4;">
-                    <div style="display: block; padding: 7px; box-sizing: broder-box;">
-                        {{ formatCurrency($product->pivot['unit_price'], $currency, $locale) }}
-                    </div>
-                </li>
-                <li style="clear: both;"></li>
-            </ul>
-        @endforeach
-    @endif
-
-    <div style="height: 20px;"></div>
-
-    <div style="display: block;">
-        <div style="width: 65%; height: 10px; {{ $is_rtl ? ' direction: rtl; float: right;' : 'float: left;' }}"></div>
-        <div
-            style="width: 33%; {{ $is_rtl ? ' direction: rtl; float: left; margin-left: 10px;' : 'float: right; margin-right: 10px;' }}">
-            @if (isset($order->amount))
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 48%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }} color: #6b7280; font-size:14px;">
-                        {{ $translated_text['subtotal'] }} : </div>
-                    <div
-                        style="display: block; width: 50%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }} color: #6b7280; font-size:14px;">
-                        {{ formatCurrency($order->amount, $currency, $locale) }}
-                    </div>
-                    <div style="clear: both;"></div>
-                </div>
-                <br>
-            @endif
-            @if (isset($order->discount))
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 48%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }} color: #6b7280; font-size:14px;">
-                        {{ $translated_text['discount'] }} : </div>
-
-                    <div
-                        style="display: block; width: 50%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }} color: #6b7280; font-size:14px;">
-                        {{ formatCurrency($order->discount, $currency, $locale) }}
-                    </div>
-                    <div style="clear: both;"></div>
-                </div>
-                <br>
-            @endif
-            @if (isset($order->sales_tax))
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 48%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }} color: #6b7280; font-size:14px;">
-                        {{ $translated_text['tax'] }} : </div>
-
-                    <div
-                        style="display: block; width: 50%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }} color: #6b7280; font-size:14px;">
-                        {{ formatCurrency($order->sales_tax + $order->cancelled_tax, $currency, $locale) }}
-                        <div style="clear: both;"></div>
-                    </div>
-                    <br>
-            @endif
-            @if (isset($order->delivery_fee))
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 48%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }} color: #6b7280; font-size:14px;">
-                        {{ $translated_text['delivery_fee'] }} : </div>
-
-                    <div
-                        style="display: block; width: 50%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }} color: #6b7280; font-size:14px;">
-                        {{ formatCurrency($order->sales_tax + $order->cancelled_tax, $currency, $locale) }}
-                    </div>
-
-                    <div style="clear: both;"></div>
-                </div>
-                <br>
-            @endif
-            @if (isset($order->cancelled_amount) && $order->cancelled_amount > 0 && $order->cancelled_tax > 0)
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 68%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }}  color: #6b7280; font-size:14px;">
-                        {{ isset($translated_text['cancelled_tax']) ? $translated_text['cancelled_tax'] : 'Tax reduced' }}
-                        :
-                    </div>
-
-                    <div
-                        style="display: block; width: 30%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }}  color: #6b7280; font-size:14px;">
-                        - {{ formatCurrency($order->cancelled_tax, $currency, $locale) }}
-                    </div>
-
-                    <div style="clear: both;"></div>
-                </div>
-                <br>
-            @endif
-            @if (isset($order->cancelled_amount) && $order->cancelled_amount > 0 && $order->cancelled_delivery_fee > 0)
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 73%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }}  color: #6b7280; font-size:14px;">
-                        {{ isset($translated_text['cancelled_delivery_fee']) ? $translated_text['cancelled_delivery_fee'] : 'Delivery fee reduced' }}
-                        :
-                    </div>
-
-                    <div
-                        style="display: block; width: 23%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }}  color: #6b7280; font-size:14px;">
-                        - {{ formatCurrency($order->cancelled_delivery_fee, $currency, $locale) }}
-                    </div>
-
-                    <div style="clear: both;"></div>
-                </div>
-                <br>
-            @endif
-            @if (isset($order->cancelled_amount) && $order->cancelled_amount > 0)
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 68%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }}  color: #6b7280; font-size:14px;">
-                        {{ isset($translated_text['cancelled_subtotal']) ? $translated_text['cancelled_subtotal'] : ' Cancelled subtotal ' }}:
-                    </div>
-
-                    <div
-                        style="display: block; width: 30%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }}  color: #6b7280; font-size:14px;">
-                        -{{ formatCurrency($order->cancelled_amount - $order->cancelled_tax - $order->cancelled_delivery_fee, $currency, $locale) }}
-                    </div>
-
-                    <div style="clear: both;"></div>
-                </div>
-                <br>
-            @endif
-            @if (isset($order->total))
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 48%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }} font-weight: bold; color: #000000; font-size:14px;">
-                        {{ $translated_text['total'] }} : </div>
-
-                    <div
-                        style="display: block; width: 50%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }} font-weight: bold; color: #000000; font-size:14px;">
-                        {{ formatCurrency($order->total, $currency, $locale) }}
-                    </div>
-
-                    <div style="clear: both;"></div>
-                </div>
-                <br>
-            @endif
-            @if (isset($order?->wallet_point?->amount) && !$order->shop_id)
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 48%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }} color: #6b7280; font-size:14px;">
-                        {{ $translated_text['paid_from_wallet'] }} : </div>
-
-                    <div
-                        style="display: block; width: 50%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }} color: #6b7280; font-size:14px;">
-                        {{ formatCurrency($order?->wallet_point?->amount, $currency, $locale) }}
-                    </div>
-
-                    <div style="clear: both;"></div>
-                </div>
-                <br>
-            @endif
-            @if (!$order->shop_id)
-                <div style="padding: 3px 0px; box-sizing: border-box;">
-                    <div
-                        style="display: block; width: 48%; {{ $is_rtl ? ' direction: rtl; float: right; text-align: right;' : 'float: left;' }} color: #6b7280; font-size:14px;">
-                        {{ $translated_text['amount_due'] }} : </div>
-
-                    <div
-                        style="display: block; width: 50%; {{ $is_rtl ? ' direction: rtl; float: left; text-align: left;' : 'float: right; text-align: right;' }} color: #6b7280; font-size:14px;">
-                        {{ formatCurrency($amountDue, $currency, $locale) }}
-                    </div>
-
-                    <div style="clear: both;"></div>
-                </div>
-            @endif
-        </div>
-        <div style="clear: both;"></div>
-    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#e7f4ec; border-collapse:collapse;">
+        <tr>
+            <td style="padding:0;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-collapse:collapse;">
+                    <tr>
+                        <td style="background-color:#157a45; height:8px; font-size:0; line-height:0;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#f5a31a; height:4px; font-size:0; line-height:0;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:18px 22px 8px 22px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td width="58%" valign="middle">
+                                        @if ($logoSrc)
+                                            <img src="{{ $logoSrc }}" alt="{{ $options['siteTitle'] ?? 'Angon Mart' }}" style="height:58px; width:auto;">
+                                        @else
+                                            <div style="font-size:22px; font-weight:bold; color:#157a45;">{{ $options['siteTitle'] ?? 'Angon Mart' }}</div>
+                                        @endif
+                                    </td>
+                                    <td width="42%" valign="middle" align="right">
+                                        <div style="font-size:22px; font-weight:bold; letter-spacing:1px; color:#157a45;">
+                                            {{ ($language ?? '') === 'bn' ? 'ইনভয়েস' : 'INVOICE' }}
+                                        </div>
+                                        <div style="margin-top:4px; font-size:13px; color:#1c2b23;">
+                                            {{ $label('invoice_no', 'Invoice no') }}: {{ $order->tracking_number }}
+                                        </div>
+                                        <div style="margin-top:2px; font-size:11px; color:#5d6f64;">
+                                            {{ $label('date', 'Date') }}: {{ $invoiceDate }}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px 22px 0 22px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td width="49%" valign="top" style="background-color:#f3faf6; border:1px solid #d7ebdf; padding:12px 14px;">
+                                        <div style="font-size:10px; letter-spacing:0.6px; color:#157a45; font-weight:bold; text-transform:uppercase;">
+                                            {{ ($language ?? '') === 'bn' ? 'বিল প্রাপক' : 'Billed to' }}
+                                        </div>
+                                        @if (!empty($customer['name']))
+                                            <div style="margin-top:6px; font-size:14px; font-weight:bold; color:#1c2b23;">{{ $customer['name'] }}</div>
+                                        @endif
+                                        @if (!empty($customer['email']))
+                                            <div style="margin-top:3px; color:#5d6f64;">{{ $customer['email'] }}</div>
+                                        @endif
+                                        @if (!empty($order->customer_contact))
+                                            <div style="margin-top:2px; color:#5d6f64;">{{ $order->customer_contact }}</div>
+                                        @endif
+                                        @if (!empty($addressParts))
+                                            <div style="margin-top:6px; color:#3d4f45; line-height:1.45;">
+                                                {{ implode(', ', $addressParts) }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td width="2%"></td>
+                                    <td width="49%" valign="top" style="background-color:#f3faf6; border:1px solid #d7ebdf; padding:12px 14px;">
+                                        <div style="font-size:10px; letter-spacing:0.6px; color:#157a45; font-weight:bold; text-transform:uppercase;">
+                                            {{ ($language ?? '') === 'bn' ? 'প্রেরক' : 'From' }}
+                                        </div>
+                                        <div style="margin-top:6px; font-size:14px; font-weight:bold; color:#1c2b23;">
+                                            {{ $options['siteTitle'] ?? 'Angon Mart' }}
+                                        </div>
+                                        @if (!empty($authorDetails['website']))
+                                            <div style="margin-top:3px; color:#5d6f64;">{{ $authorDetails['website'] }}</div>
+                                        @endif
+                                        @if (!empty($authorDetails['contact']))
+                                            <div style="margin-top:2px; color:#5d6f64;">{{ $authorDetails['contact'] }}</div>
+                                        @endif
+                                        @if (!empty($authorLocation['formattedAddress']))
+                                            <div style="margin-top:6px; color:#3d4f45; line-height:1.45;">{{ $authorLocation['formattedAddress'] }}</div>
+                                        @endif
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:12px 22px 0 22px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fff8eb; border:1px solid #f3ddb0;">
+                                <tr>
+                                    <td style="padding:8px 12px; color:#6b5420;">
+                                        {{ $label('payment_method', 'Payment method') }}:
+                                        <strong style="color:#1c2b23;">{{ $order->payment_gateway ?: '—' }}</strong>
+                                    </td>
+                                    <td style="padding:8px 12px; color:#6b5420;" align="right">
+                                        {{ ($language ?? '') === 'bn' ? 'অর্ডার' : 'Order' }}:
+                                        <strong style="color:#1c2b23;">{{ $orderStatus }}</strong>
+                                        <span style="color:#c4a15a;">|</span>
+                                        {{ ($language ?? '') === 'bn' ? 'পেমেন্ট' : 'Payment' }}:
+                                        <strong style="color:#1c2b23;">{{ $paymentStatus }}</strong>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:14px 22px 0 22px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                                <tr>
+                                    <td width="52%" style="background-color:#157a45; color:#ffffff; font-weight:bold; padding:8px 10px;">
+                                        {{ $label('products', 'Products') }}
+                                    </td>
+                                    <td width="16%" align="center" style="background-color:#157a45; color:#ffffff; font-weight:bold; padding:8px 10px;">
+                                        {{ $label('quantity', 'Qty') }}
+                                    </td>
+                                    <td width="32%" align="right" style="background-color:#157a45; color:#ffffff; font-weight:bold; padding:8px 10px;">
+                                        {{ $label('total', 'Total') }}
+                                    </td>
+                                </tr>
+                                @forelse ($products as $product)
+                                    @php
+                                        $lineTotal = $product->pivot['subtotal'] ?? null;
+                                        if ($lineTotal === null) {
+                                            $lineTotal = (float) ($product->pivot['unit_price'] ?? 0) * (float) ($product->pivot['order_quantity'] ?? 0);
+                                        }
+                                        $rowBg = $loop->iteration % 2 === 0 ? '#f3faf6' : '#ffffff';
+                                    @endphp
+                                    <tr>
+                                        <td style="background-color:{{ $rowBg }}; border-bottom:1px solid #e3f0e8; padding:8px 10px; color:#1c2b23;">
+                                            {{ $product['name'] }}
+                                            @if (in_array($product->id, $cancelled_products))
+                                                <span style="color:#c2410c;">({{ $label('cancelled', 'Cancelled') }})</span>
+                                            @endif
+                                        </td>
+                                        <td align="center" style="background-color:{{ $rowBg }}; border-bottom:1px solid #e3f0e8; padding:8px 10px;">
+                                            {{ $product->pivot['order_quantity'] }}
+                                        </td>
+                                        <td align="right" style="background-color:{{ $rowBg }}; border-bottom:1px solid #e3f0e8; padding:8px 10px;">
+                                            {{ $money($lineTotal) }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3" style="padding:12px 10px; color:#5d6f64; border-bottom:1px solid #e3f0e8;">
+                                            —
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:14px 22px 18px 22px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td width="52%"></td>
+                                    <td width="48%" valign="top" style="background-color:#f3faf6; border:1px solid #d7ebdf; padding:8px 12px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            @if (isset($order->amount))
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('subtotal', 'Subtotal') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#1c2b23;">{{ $money($order->amount) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (isset($order->discount))
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('discount', 'Discount') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#1c2b23;">{{ $money($order->discount) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (isset($order->sales_tax))
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('tax', 'Tax') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#1c2b23;">{{ $money(($order->sales_tax ?? 0) + ($order->cancelled_tax ?? 0)) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (isset($order->delivery_fee))
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('delivery_fee', 'Delivery fee') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#1c2b23;">{{ $money($order->delivery_fee) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (isset($order->cancelled_amount) && $order->cancelled_amount > 0 && $order->cancelled_tax > 0)
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('cancelled_tax', 'Tax reduced') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#c2410c;">- {{ $money($order->cancelled_tax) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (isset($order->cancelled_amount) && $order->cancelled_amount > 0 && $order->cancelled_delivery_fee > 0)
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('cancelled_delivery_fee', 'Delivery fee reduced') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#c2410c;">- {{ $money($order->cancelled_delivery_fee) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (isset($order->cancelled_amount) && $order->cancelled_amount > 0)
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('cancelled_subtotal', 'Cancelled subtotal') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#c2410c;">- {{ $money($order->cancelled_amount - $order->cancelled_tax - $order->cancelled_delivery_fee) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (isset($order->total))
+                                                <tr>
+                                                    <td style="padding:8px 6px; background-color:#157a45; color:#ffffff; font-weight:bold;">{{ $label('total', 'Total') }}</td>
+                                                    <td align="right" style="padding:8px 6px; background-color:#157a45; color:#ffffff; font-weight:bold;">{{ $money($order->total) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (isset($order?->wallet_point?->amount) && !$order->shop_id)
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('paid_from_wallet', 'Paid from wallet') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#1c2b23;">{{ $money($order->wallet_point->amount) }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (!$order->shop_id)
+                                                <tr>
+                                                    <td style="padding:4px 0; color:#5d6f64;">{{ $label('amount_due', 'Amount due') }}</td>
+                                                    <td align="right" style="padding:4px 0; color:#1c2b23; font-weight:bold;">{{ $money($amountDue) }}</td>
+                                                </tr>
+                                            @endif
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#157a45; color:#ffffff; padding:12px 22px; font-size:11px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="color:#ffffff;">
+                                        {{ ($language ?? '') === 'bn' ? 'কেনাকাটার জন্য ধন্যবাদ।' : 'Thank you for shopping with us.' }}
+                                    </td>
+                                    <td align="right" style="color:#d7f5e4;">
+                                        {{ $authorDetails['website'] ?? ($options['siteTitle'] ?? 'Angon Mart') }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 
 </html>
