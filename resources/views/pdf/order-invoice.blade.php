@@ -75,7 +75,7 @@
             <td style="padding:0;">
                 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-collapse:collapse;">
                     <tr>
-                        <td style="background-color:#000000; height:6px; font-size:0; line-height:0;">&nbsp;</td>
+                        <td style="border-bottom:1px solid #000000; height:1px; font-size:0; line-height:0;">&nbsp;</td>
                     </tr>
                     <tr>
                         <td style="padding:18px 22px 8px 22px;">
@@ -83,7 +83,7 @@
                                 <tr>
                                     <td width="58%" valign="middle">
                                         @if ($logoSrc)
-                                            <img src="{{ $logoSrc }}" alt="{{ $options['siteTitle'] ?? 'Angon Mart' }}" style="height:58px; width:auto;">
+                                            <img src="{{ $logoSrc }}" alt="{{ $options['siteTitle'] ?? 'Angon Mart' }}" style="height:42px; width:auto;">
                                         @else
                                             <div style="font-size:22px; font-weight:bold; color:#000000;">{{ $options['siteTitle'] ?? 'Angon Mart' }}</div>
                                         @endif
@@ -171,13 +171,13 @@
                         <td style="padding:14px 22px 0 22px;">
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                                 <tr>
-                                    <td width="52%" style="background-color:#000000; color:#ffffff; font-weight:bold; padding:8px 10px;">
+                                    <td width="52%" style="background-color:#ffffff; color:#000000; font-weight:bold; padding:6px 10px; border-bottom:1px solid #000000;">
                                         {{ $label('products', 'Products') }}
                                     </td>
-                                    <td width="16%" align="center" style="background-color:#000000; color:#ffffff; font-weight:bold; padding:8px 10px;">
+                                    <td width="16%" align="center" style="background-color:#ffffff; color:#000000; font-weight:bold; padding:6px 10px; border-bottom:1px solid #000000;">
                                         {{ $label('quantity', 'Qty') }}
                                     </td>
-                                    <td width="32%" align="right" style="background-color:#000000; color:#ffffff; font-weight:bold; padding:8px 10px;">
+                                    <td width="32%" align="right" style="background-color:#ffffff; color:#000000; font-weight:bold; padding:6px 10px; border-bottom:1px solid #000000;">
                                         {{ $label('total', 'Total') }}
                                     </td>
                                 </tr>
@@ -264,8 +264,8 @@
                                             @endif
                                             @if (isset($order->total))
                                                 <tr>
-                                                    <td style="padding:8px 6px; background-color:#000000; color:#ffffff; font-weight:bold;">{{ $label('total', 'Total') }}</td>
-                                                    <td align="right" style="padding:8px 6px; background-color:#000000; color:#ffffff; font-weight:bold;">{{ $money($order->total) }}</td>
+                                                    <td style="padding:6px 0; background-color:#ffffff; color:#000000; font-weight:bold; border-top:1px solid #000000;">{{ $label('total', 'Total') }}</td>
+                                                    <td align="right" style="padding:6px 0; background-color:#ffffff; color:#000000; font-weight:bold; border-top:1px solid #000000;">{{ $money($order->total) }}</td>
                                                 </tr>
                                             @endif
                                             @if (isset($order?->wallet_point?->amount) && !$order->shop_id)
@@ -287,13 +287,13 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="background-color:#000000; color:#ffffff; padding:12px 22px; font-size:11px;">
+                        <td style="background-color:#ffffff; color:#000000; padding:12px 22px; font-size:11px; border-top:1px solid #000000;">
                             <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td style="color:#ffffff;">
+                                    <td style="color:#000000;">
                                         {{ ($language ?? '') === 'bn' ? 'কেনাকাটার জন্য ধন্যবাদ।' : 'Thank you for shopping with us.' }}
                                     </td>
-                                    <td align="right" style="color:#ffffff;">
+                                    <td align="right" style="color:#000000;">
                                         {{ $authorDetails['website'] ?? ($options['siteTitle'] ?? 'Angon Mart') }}
                                     </td>
                                 </tr>
